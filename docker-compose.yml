@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  # API Service
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: chatbot-api
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-3.5-turbo}
+      - MAX_TOKENS=${MAX_TOKENS:-500}
+      - TEMPERATURE=${TEMPERATURE:-0.7}
+      - RATE_LIMIT_WINDOW_MS=${RATE_LIMIT_WINDOW_MS:-900000}
+      - RATE_LIMIT_MAX_REQUESTS=${RATE_LIMIT_MAX_REQUESTS:-100}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    volumes:
+      # Persistent logs
+      - ./logs:/app/logs
+    networks:
+      - chatbot-network
+
+  # Redis for rate limiting and sessions (optional, for future scaling)
+  # Uncomment when implementing distributed rate limiting
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: chatbot-redis
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis-data:/data
+  #   networks:
+  #     - chatbot-network
+  #   restart: unless-stopped
+
+networks:
+  chatbot-network:
+    driver: bridge
+
+volumes:
+  # Uncomment when using Redis
+  # redis-data:
+  logs:
+
