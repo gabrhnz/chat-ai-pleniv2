@@ -38,8 +38,8 @@ export const config = {
   openai: {
     apiKey: process.env.OPENAI_API_KEY,
     model: process.env.OPENAI_MODEL || 'gpt-3.5-turbo',
-    maxTokens: parseInt(process.env.MAX_TOKENS || '500', 10),
-    temperature: parseFloat(process.env.TEMPERATURE || '0.7'),
+    maxTokens: parseInt(process.env.MAX_TOKENS || '100', 10),
+    temperature: parseFloat(process.env.TEMPERATURE || '0.1'),
     // OpenRouter specific
     useOpenRouter: process.env.USE_OPENROUTER === 'true',
     baseURL: process.env.USE_OPENROUTER === 'true' 
