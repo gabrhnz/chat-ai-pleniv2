@@ -30,6 +30,12 @@ const customFormat = printf(({ level, message, timestamp, stack, ...metadata }) 
 });
 
 /**
+ * Detecta si está en un ambiente serverless (Vercel, AWS Lambda, etc.)
+ * donde no se pueden crear archivos en el filesystem
+ */
+const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME;
+
+/**
  * Configuración del logger
  */
 const logger = winston.createLogger({
@@ -40,7 +46,7 @@ const logger = winston.createLogger({
     customFormat
   ),
   transports: [
-    // Console transport con colores en desarrollo
+    // Console transport - siempre disponible
     new winston.transports.Console({
       format: combine(
         colorize(),
@@ -48,8 +54,8 @@ const logger = winston.createLogger({
       ),
     }),
     
-    // File transports para producción
-    ...(config.server.isProduction ? [
+    // File transports solo en desarrollo local (no serverless)
+    ...(!isServerless && !config.server.isProduction ? [
       new winston.transports.File({
         filename: 'logs/error.log',
         level: 'error',
