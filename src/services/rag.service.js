@@ -298,8 +298,23 @@ ${hasGoodContext ?
       };
     } else {
       // Return complete response
-      const answer = response.choices[0].message.content;
+      let answer = response.choices[0].message.content;
       const tokensUsed = response.usage?.total_tokens || 0;
+      
+      // FORCE truncate to ~40 words (aprox 200 chars) if too long
+      const MAX_CHARS = 250;
+      if (answer.length > MAX_CHARS) {
+        answer = answer.substring(0, MAX_CHARS).trim();
+        // Find last complete sentence
+        const lastPeriod = Math.max(
+          answer.lastIndexOf('.'),
+          answer.lastIndexOf('?'),
+          answer.lastIndexOf('!')
+        );
+        if (lastPeriod > 100) {
+          answer = answer.substring(0, lastPeriod + 1);
+        }
+      }
       
       return {
         answer,
