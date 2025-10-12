@@ -285,8 +285,8 @@ ${hasGoodContext ?
     const response = await openai.chat.completions.create({
       model: process.env.OPENAI_MODEL || 'openai/gpt-4o-mini',
       messages,
-      temperature: 0.3, // Lower temperature for more consistent, factual answers
-      max_tokens: 500,
+      temperature: 0.1, // Very low for deterministic, concise answers
+      max_tokens: 100, // LIMIT to force short responses
       stream: streaming,
     });
     
