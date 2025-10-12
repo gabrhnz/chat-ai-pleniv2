@@ -1,106 +1,495 @@
-# 📚 API Reference
+# 📡 API Documentation - FAQ Bot RAG
 
-Documentación detallada de todos los endpoints de la API del Chatbot.
-
-## Base URL
-
-```
-http://localhost:3000
-```
-
-En producción, reemplaza con tu dominio.
+Documentación completa de todos los endpoints del sistema.
 
 ---
 
-## Endpoints
+## 🌐 Base URL
 
-### 1. Root Endpoint
+- **Local:** `http://localhost:3000`
+- **Production:** `https://tu-proyecto.vercel.app`
 
-Información básica de la API.
+---
 
-```http
-GET /
+## 🔐 Autenticación
+
+### Endpoints Públicos
+
+No requieren autenticación:
+- `GET /`
+- `GET /api/health`
+- `POST /api/chat`
+
+### Endpoints de Admin
+
+Requieren header de autenticación:
+```bash
+X-API-Key: tu-admin-api-key
 ```
 
-#### Response
+O alternativamente:
+```bash
+Authorization: Bearer tu-admin-api-key
+```
 
+---
+
+## 📋 Endpoints
+
+### 1. Health Check
+
+**GET** `/api/health`
+
+Verifica el estado del servicio.
+
+**Response:**
 ```json
 {
-  "message": "Chatbot AI API - Backend Service",
-  "version": "1.0.0",
-  "status": "operational",
-  "documentation": "/api/docs",
-  "endpoints": {
-    "chat": "POST /api/chat",
-    "health": "GET /api/health"
-  }
+  "status": "healthy",
+  "timestamp": "2025-10-12T12:00:00.000Z",
+  "services": {
+    "openai": "connected"
+  },
+  "uptime": 12345.67,
+  "responseTime": "248ms"
 }
 ```
 
+**Códigos de Estado:**
+- `200` - Servicio healthy
+- `503` - Servicio degradado
+
 ---
 
-### 2. Chat Endpoint
+### 2. Chat (RAG)
 
-Procesa mensajes y retorna respuestas del chatbot AI.
+**POST** `/api/chat`
 
-```http
-POST /api/chat
-```
+Envía una pregunta y recibe respuesta con contexto de FAQs.
 
-#### Headers
-
-| Header | Value | Required |
-|--------|-------|----------|
-| Content-Type | application/json | Yes |
-
-#### Request Body
-
+**Request Body:**
 ```json
 {
-  "message": "string",
-  "context": [
+  "message": "¿Cuándo son las inscripciones?",
+  "sessionId": "optional-session-id",
+  "userId": "optional-user-id",
+  "streaming": false
+}
+```
+
+**Parameters:**
+- `message` (string, required): Pregunta del usuario
+- `sessionId` (string, optional): ID de sesión para contexto
+- `userId` (string, optional): ID de usuario para analytics
+- `streaming` (boolean, optional): Activar streaming SSE (default: false)
+
+**Response (streaming=false):**
+```json
+{
+  "reply": "Las inscripciones para el semestre 2025-1 serán del 1 al 15 de marzo de 2025...",
+  "sources": [
     {
-      "role": "user|assistant|system",
-      "content": "string"
+      "id": "uuid-123",
+      "question": "¿Cuándo son las inscripciones para el próximo semestre?",
+      "category": "matricula",
+      "similarity": 0.95
+    },
+    {
+      "id": "uuid-456",
+      "question": "¿Cuáles son los requisitos para matricularse?",
+      "category": "matricula",
+      "similarity": 0.82
     }
   ],
-  "sessionId": "string",
-  "userId": "string"
-}
-```
-
-#### Parameters
-
-| Parameter | Type | Required | Description | Constraints |
-|-----------|------|----------|-------------|-------------|
-| message | string | ✅ Yes | User message | 1-4000 characters |
-| context | array | ❌ No | Conversation history | Max 10 messages recommended |
-| context[].role | string | If context | Message role | 'user', 'assistant', or 'system' |
-| context[].content | string | If context | Message content | Any string |
-| sessionId | string | ❌ No | Session identifier | 1-100 characters |
-| userId | string | ❌ No | User identifier | 1-100 characters |
-
-#### Success Response (200 OK)
-
-```json
-{
-  "reply": "This is the chatbot response",
-  "usage": {
-    "prompt_tokens": 25,
-    "completion_tokens": 15,
-    "total_tokens": 40
-  },
   "metadata": {
-    "model": "gpt-3.5-turbo",
-    "finishReason": "stop",
-    "timestamp": "2024-01-15T10:30:00.000Z"
+    "duration": 1234,
+    "faqsCount": 2,
+    "topSimilarity": 0.95,
+    "model": "openai/gpt-4o-mini",
+    "tokensUsed": 250,
+    "timestamp": "2025-10-12T12:00:00.000Z"
   }
 }
 ```
 
-#### Error Responses
+**Response (streaming=true):**
 
-##### 400 Bad Request - Validation Error
+Server-Sent Events (SSE) stream:
+
+```
+data: {"type":"context","sources":[...]}
+
+data: {"type":"chunk","content":"Las inscripciones"}
+
+data: {"type":"chunk","content":" para el semestre"}
+
+data: {"type":"done","metadata":{...}}
+```
+
+**Códigos de Estado:**
+- `200` - Success
+- `400` - Bad request (mensaje faltante o inválido)
+- `429` - Rate limit exceeded
+- `500` - Server error
+
+**Ejemplo cURL:**
+```bash
+curl -X POST http://localhost:3000/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "¿Cuándo son las inscripciones?"
+  }'
+```
+
+---
+
+## 👨‍💼 Admin Endpoints
+
+Todos requieren autenticación con API key.
+
+### 3. Listar FAQs
+
+**GET** `/api/admin/faqs`
+
+Lista todas las FAQs con paginación y filtros.
+
+**Query Parameters:**
+- `page` (number, default: 1): Página actual
+- `limit` (number, default: 20): Items por página
+- `category` (string, optional): Filtrar por categoría
+- `isActive` (boolean, optional): Filtrar por estado activo
+- `search` (string, optional): Búsqueda por texto
+
+**Response:**
+```json
+{
+  "data": [
+    {
+      "id": "uuid-123",
+      "question": "¿Cuándo son las inscripciones?",
+      "answer": "Las inscripciones son...",
+      "category": "matricula",
+      "keywords": ["inscripciones", "matricula", "fechas"],
+      "metadata": {},
+      "created_at": "2025-10-12T12:00:00.000Z",
+      "updated_at": "2025-10-12T12:00:00.000Z",
+      "is_active": true,
+      "views_count": 42,
+      "helpful_count": 15
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 100,
+    "pages": 5
+  }
+}
+```
+
+**Ejemplo:**
+```bash
+curl -H "X-API-Key: tu-admin-key" \
+  "http://localhost:3000/api/admin/faqs?page=1&limit=10&category=matricula"
+```
+
+---
+
+### 4. Obtener FAQ
+
+**GET** `/api/admin/faqs/:id`
+
+Obtiene una FAQ específica por ID.
+
+**Response:**
+```json
+{
+  "id": "uuid-123",
+  "question": "¿Cuándo son las inscripciones?",
+  "answer": "Las inscripciones son del 1 al 15 de marzo...",
+  "category": "matricula",
+  "keywords": ["inscripciones", "matricula"],
+  "metadata": {
+    "priority": "high",
+    "last_updated": "2025-01-01"
+  },
+  "embedding": [0.123, 0.456, ...],
+  "created_at": "2025-10-12T12:00:00.000Z",
+  "updated_at": "2025-10-12T12:00:00.000Z",
+  "is_active": true
+}
+```
+
+**Códigos de Estado:**
+- `200` - Success
+- `404` - FAQ not found
+
+---
+
+### 5. Crear FAQ
+
+**POST** `/api/admin/faqs`
+
+Crea una nueva FAQ. El embedding se genera automáticamente.
+
+**Request Body:**
+```json
+{
+  "question": "¿Cómo solicito una beca?",
+  "answer": "Para solicitar una beca debes: 1) Ingresar al portal...",
+  "category": "becas",
+  "keywords": ["beca", "ayuda", "financiera", "solicitud"],
+  "metadata": {
+    "priority": "high",
+    "contact_email": "becas@universidad.edu"
+  }
+}
+```
+
+**Validaciones:**
+- `question`: requerido, string no vacío
+- `answer`: requerido, string no vacío
+- `category`: opcional, string
+- `keywords`: opcional, array de strings
+- `metadata`: opcional, objeto JSON
+
+**Response:**
+```json
+{
+  "id": "uuid-new",
+  "question": "¿Cómo solicito una beca?",
+  "answer": "Para solicitar una beca debes...",
+  "category": "becas",
+  "keywords": ["beca", "ayuda", "financiera", "solicitud"],
+  "metadata": {...},
+  "embedding": [0.123, ...],
+  "created_at": "2025-10-12T12:00:00.000Z",
+  "updated_at": "2025-10-12T12:00:00.000Z",
+  "is_active": true
+}
+```
+
+**Códigos de Estado:**
+- `201` - Created
+- `400` - Validation error
+- `500` - Server error
+
+**Ejemplo:**
+```bash
+curl -X POST http://localhost:3000/api/admin/faqs \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: tu-admin-key" \
+  -d '{
+    "question": "¿Cómo solicito una beca?",
+    "answer": "Para solicitar una beca debes ir al portal...",
+    "category": "becas",
+    "keywords": ["beca", "ayuda"]
+  }'
+```
+
+---
+
+### 6. Actualizar FAQ
+
+**PUT** `/api/admin/faqs/:id`
+
+Actualiza una FAQ existente. Si se cambia la pregunta, el embedding se regenera automáticamente.
+
+**Request Body:**
+```json
+{
+  "question": "¿Cómo solicito una beca? (actualizado)",
+  "answer": "Nueva respuesta actualizada...",
+  "category": "becas",
+  "keywords": ["beca", "ayuda", "solicitud"],
+  "metadata": {...},
+  "is_active": true
+}
+```
+
+**Response:** (igual que GET /api/admin/faqs/:id)
+
+**Códigos de Estado:**
+- `200` - Updated
+- `404` - FAQ not found
+- `400` - Validation error
+
+---
+
+### 7. Eliminar FAQ
+
+**DELETE** `/api/admin/faqs/:id`
+
+Elimina o desactiva una FAQ.
+
+**Query Parameters:**
+- `hard` (boolean, default: false): Si true, elimina permanentemente. Si false, soft delete (is_active = false)
+
+**Response:**
+- Soft delete: devuelve FAQ actualizada con `is_active: false`
+- Hard delete: status `204 No Content`
+
+**Ejemplo:**
+```bash
+# Soft delete (recomendado)
+curl -X DELETE \
+  -H "X-API-Key: tu-admin-key" \
+  http://localhost:3000/api/admin/faqs/uuid-123
+
+# Hard delete (permanente)
+curl -X DELETE \
+  -H "X-API-Key: tu-admin-key" \
+  "http://localhost:3000/api/admin/faqs/uuid-123?hard=true"
+```
+
+---
+
+### 8. Bulk Create FAQs
+
+**POST** `/api/admin/faqs/bulk`
+
+Crea múltiples FAQs en una sola petición. Los embeddings se generan para todas.
+
+**Request Body:**
+```json
+{
+  "faqs": [
+    {
+      "question": "¿Pregunta 1?",
+      "answer": "Respuesta 1",
+      "category": "categoria1",
+      "keywords": ["keyword1"]
+    },
+    {
+      "question": "¿Pregunta 2?",
+      "answer": "Respuesta 2",
+      "category": "categoria2",
+      "keywords": ["keyword2"]
+    }
+  ]
+}
+```
+
+**Response:**
+```json
+{
+  "inserted": 2,
+  "data": [...]
+}
+```
+
+**Códigos de Estado:**
+- `201` - Created
+- `400` - Validation error (debe ser array no vacío)
+
+---
+
+### 9. Regenerar Embeddings
+
+**POST** `/api/admin/embeddings/regenerate`
+
+Regenera embeddings para FAQs específicas o todas.
+
+**Request Body:**
+```json
+{
+  "faqIds": ["uuid-1", "uuid-2"]
+}
+```
+
+Si `faqIds` no se proporciona o es null, regenera todos los embeddings.
+
+**Response:**
+```json
+{
+  "message": "Embeddings regenerated",
+  "success": 10,
+  "errors": 0,
+  "total": 10
+}
+```
+
+**Tiempo estimado:** ~1-2 segundos por cada 50 FAQs
+
+**Ejemplo:**
+```bash
+# Regenerar específicas
+curl -X POST http://localhost:3000/api/admin/embeddings/regenerate \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: tu-admin-key" \
+  -d '{"faqIds": ["uuid-1", "uuid-2"]}'
+
+# Regenerar todas
+curl -X POST http://localhost:3000/api/admin/embeddings/regenerate \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: tu-admin-key" \
+  -d '{}'
+```
+
+---
+
+### 10. Obtener Categorías
+
+**GET** `/api/admin/categories`
+
+Lista todas las categorías con conteo de FAQs.
+
+**Response:**
+```json
+[
+  {
+    "name": "matricula",
+    "count": 15
+  },
+  {
+    "name": "becas",
+    "count": 8
+  },
+  {
+    "name": "horarios",
+    "count": 12
+  }
+]
+```
+
+---
+
+### 11. Estadísticas
+
+**GET** `/api/admin/stats`
+
+Obtiene estadísticas y analytics del sistema.
+
+**Query Parameters:**
+- `timeRange` (string, default: "7d"): Rango de tiempo - "1d", "7d", "30d"
+
+**Response:**
+```json
+{
+  "faqs": {
+    "total": 100,
+    "categories": 10
+  },
+  "queries": {
+    "total": 1523,
+    "timeRange": "7d",
+    "avgResponseTimeMs": 1234,
+    "avgTopSimilarity": "0.850"
+  }
+}
+```
+
+**Ejemplo:**
+```bash
+curl -H "X-API-Key: tu-admin-key" \
+  "http://localhost:3000/api/admin/stats?timeRange=30d"
+```
+
+---
+
+## ⚠️ Códigos de Error
+
+### 400 Bad Request
 
 ```json
 {
@@ -108,482 +497,109 @@ POST /api/chat
   "details": [
     {
       "field": "message",
-      "message": "Message is required",
-      "value": ""
+      "message": "Message is required"
     }
   ]
 }
 ```
 
-##### 429 Too Many Requests - Rate Limit
+### 401 Unauthorized
 
 ```json
 {
-  "error": "Too many requests from this IP, please try again later.",
-  "retryAfter": 900
+  "error": "Authentication required",
+  "message": "Please provide an API key in Authorization header or X-API-Key header"
 }
 ```
 
-##### 502 Bad Gateway - OpenAI Error
+### 403 Forbidden
 
 ```json
 {
-  "error": "Error communicating with OpenAI service",
-  "details": {
-    "type": "rate_limit_exceeded",
-    "originalMessage": "Rate limit exceeded"
-  }
+  "error": "Invalid credentials",
+  "message": "The provided API key is invalid"
 }
 ```
 
-##### 500 Internal Server Error
+### 404 Not Found
 
 ```json
 {
-  "error": "Internal server error"
+  "error": "Not found",
+  "message": "Route GET /api/invalid not found"
 }
 ```
 
-#### Examples
-
-##### Simple Message
-
-```bash
-curl -X POST http://localhost:3000/api/chat \
-  -H "Content-Type: application/json" \
-  -d '{
-    "message": "What is artificial intelligence?"
-  }'
-```
-
-##### With Context
-
-```bash
-curl -X POST http://localhost:3000/api/chat \
-  -H "Content-Type: application/json" \
-  -d '{
-    "message": "Can you explain more?",
-    "context": [
-      {
-        "role": "user",
-        "content": "What is AI?"
-      },
-      {
-        "role": "assistant",
-        "content": "AI is the simulation of human intelligence..."
-      }
-    ]
-  }'
-```
-
-##### With Session and User IDs
-
-```bash
-curl -X POST http://localhost:3000/api/chat \
-  -H "Content-Type: application/json" \
-  -d '{
-    "message": "Hello!",
-    "sessionId": "session-abc123",
-    "userId": "user-xyz789"
-  }'
-```
-
----
-
-### 3. Health Check Endpoint
-
-Verifica el estado del servicio y conectividad con OpenAI.
-
-```http
-GET /api/health
-```
-
-#### Success Response (200 OK)
+### 429 Too Many Requests
 
 ```json
 {
-  "status": "healthy",
-  "timestamp": "2024-01-15T10:30:00.000Z",
-  "services": {
-    "openai": "connected"
-  },
-  "uptime": 3600.5,
-  "responseTime": "50ms"
+  "error": "Too many requests",
+  "message": "Rate limit exceeded. Try again in 60 seconds"
 }
 ```
 
-#### Degraded Response (503 Service Unavailable)
+### 500 Internal Server Error
 
 ```json
 {
-  "status": "degraded",
-  "timestamp": "2024-01-15T10:30:00.000Z",
-  "services": {
-    "openai": "disconnected"
-  },
-  "uptime": 3600.5,
-  "responseTime": "2000ms"
-}
-```
-
-#### Example
-
-```bash
-curl http://localhost:3000/api/health
-```
-
----
-
-## Rate Limiting
-
-La API implementa rate limiting por dirección IP para prevenir abuso.
-
-### Límites Predeterminados
-
-- **Endpoint**: `/api/chat`
-- **Ventana**: 15 minutos (900,000 ms)
-- **Máximo**: 100 requests por ventana
-
-### Headers de Rate Limit
-
-Cada respuesta incluye headers informativos:
-
-```
-RateLimit-Limit: 100
-RateLimit-Remaining: 95
-RateLimit-Reset: 1673784600
-```
-
-### Cuando se Excede el Límite
-
-**Status Code**: 429 Too Many Requests
-
-**Response**:
-```json
-{
-  "error": "Too many requests from this IP, please try again later.",
-  "retryAfter": 900
-}
-```
-
-**Retry After**: Número de segundos hasta que se resetee el límite.
-
----
-
-## Error Handling
-
-Todos los errores retornan JSON con la siguiente estructura:
-
-```json
-{
-  "error": "Error message description",
-  "details": {} // Optional, provides additional context
-}
-```
-
-### HTTP Status Codes
-
-| Code | Meaning | When It Occurs |
-|------|---------|----------------|
-| 200 | OK | Request successful |
-| 400 | Bad Request | Validation error, malformed request |
-| 404 | Not Found | Endpoint doesn't exist |
-| 429 | Too Many Requests | Rate limit exceeded |
-| 500 | Internal Server Error | Server-side error |
-| 502 | Bad Gateway | Error communicating with OpenAI |
-| 503 | Service Unavailable | Service degraded or down |
-
----
-
-## Data Types
-
-### Message Object
-
-```typescript
-interface Message {
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-}
-```
-
-### Usage Object
-
-```typescript
-interface Usage {
-  prompt_tokens: number;
-  completion_tokens: number;
-  total_tokens: number;
-}
-```
-
-### Metadata Object
-
-```typescript
-interface Metadata {
-  model: string;
-  finishReason: string;
-  timestamp: string; // ISO 8601 format
+  "error": "Internal server error",
+  "message": "Error description",
+  "timestamp": "2025-10-12T12:00:00.000Z"
 }
 ```
 
 ---
 
-## Best Practices
+## 🔒 Rate Limiting
 
-### 1. Context Management
+### Límites Actuales
 
-Para mantener conversaciones coherentes:
+- **General:** 100 requests por 15 minutos por IP
+- **Chat endpoint:** 20 requests por minuto por IP
 
-```javascript
-let conversationContext = [];
-
-async function chat(message) {
-  const response = await fetch('/api/chat', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      message,
-      context: conversationContext
-    })
-  });
-  
-  const data = await response.json();
-  
-  // Agregar al contexto
-  conversationContext.push(
-    { role: 'user', content: message },
-    { role: 'assistant', content: data.reply }
-  );
-  
-  // Limitar contexto a últimos 10 mensajes
-  if (conversationContext.length > 10) {
-    conversationContext = conversationContext.slice(-10);
-  }
-  
-  return data;
-}
+Headers de respuesta:
 ```
-
-### 2. Error Handling
-
-Siempre manejar errores apropiadamente:
-
-```javascript
-async function chat(message) {
-  try {
-    const response = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message })
-    });
-    
-    if (!response.ok) {
-      const error = await response.json();
-      
-      if (response.status === 429) {
-        console.log(`Rate limited. Retry after ${error.retryAfter} seconds`);
-      }
-      
-      throw new Error(error.error);
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error('Chat error:', error.message);
-    throw error;
-  }
-}
-```
-
-### 3. Token Management
-
-Monitorear uso de tokens:
-
-```javascript
-let totalTokensUsed = 0;
-
-async function chat(message) {
-  const response = await fetch('/api/chat', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message })
-  });
-  
-  const data = await response.json();
-  totalTokensUsed += data.usage.total_tokens;
-  
-  console.log('Tokens in this request:', data.usage.total_tokens);
-  console.log('Total tokens used:', totalTokensUsed);
-  
-  return data;
-}
-```
-
-### 4. Timeout Handling
-
-Implementar timeouts para requests largos:
-
-```javascript
-async function chatWithTimeout(message, timeoutMs = 30000) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
-  
-  try {
-    const response = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message }),
-      signal: controller.signal
-    });
-    
-    return await response.json();
-  } catch (error) {
-    if (error.name === 'AbortError') {
-      throw new Error('Request timeout');
-    }
-    throw error;
-  } finally {
-    clearTimeout(timeout);
-  }
-}
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 95
+X-RateLimit-Reset: 1634567890
 ```
 
 ---
 
-## SDKs y Wrappers
+## 📊 Response Headers
 
-### JavaScript/TypeScript
+Todas las respuestas incluyen:
 
-```typescript
-// chatbot-client.ts
-class ChatbotClient {
-  private baseUrl: string;
-  private context: Array<{role: string, content: string}> = [];
-  
-  constructor(baseUrl: string = 'http://localhost:3000') {
-    this.baseUrl = baseUrl;
-  }
-  
-  async chat(message: string) {
-    const response = await fetch(`${this.baseUrl}/api/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        message,
-        context: this.context
-      })
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-    
-    const data = await response.json();
-    
-    this.context.push(
-      { role: 'user', content: message },
-      { role: 'assistant', content: data.reply }
-    );
-    
-    return data;
-  }
-  
-  clearContext() {
-    this.context = [];
-  }
-}
-
-// Uso
-const bot = new ChatbotClient('https://api.tudominio.com');
-const response = await bot.chat('Hello!');
-console.log(response.reply);
 ```
-
-### Python
-
-```python
-# chatbot_client.py
-import requests
-from typing import List, Dict, Optional
-
-class ChatbotClient:
-    def __init__(self, base_url: str = 'http://localhost:3000'):
-        self.base_url = base_url
-        self.context: List[Dict[str, str]] = []
-    
-    def chat(self, message: str) -> Dict:
-        response = requests.post(
-            f'{self.base_url}/api/chat',
-            json={
-                'message': message,
-                'context': self.context
-            }
-        )
-        response.raise_for_status()
-        
-        data = response.json()
-        
-        self.context.append({'role': 'user', 'content': message})
-        self.context.append({'role': 'assistant', 'content': data['reply']})
-        
-        return data
-    
-    def clear_context(self):
-        self.context = []
-
-# Uso
-bot = ChatbotClient('https://api.tudominio.com')
-response = bot.chat('Hello!')
-print(response['reply'])
+Content-Type: application/json
+X-Powered-By: Express
+X-Response-Time: 123ms
 ```
 
 ---
 
-## Testing
+## 🧪 Testing con Postman
 
-### Ejemplo con Postman
+### Importar Colección
 
-1. Crear nueva request
-2. Method: POST
-3. URL: `http://localhost:3000/api/chat`
-4. Headers: `Content-Type: application/json`
-5. Body (raw JSON):
-```json
-{
-  "message": "Test message"
-}
+Crea una colección de Postman con estas variables:
+
+```
+base_url: http://localhost:3000
+admin_api_key: tu-admin-api-key
 ```
 
-### Ejemplo con HTTPie
-
-```bash
-http POST localhost:3000/api/chat message="Test message"
-```
+Ejemplos de requests incluidos en el repositorio (próximamente).
 
 ---
 
-## Versionado
+## 📚 Recursos Adicionales
 
-Esta API sigue versionado semántico (SemVer):
-
-- **Versión Actual**: 1.0.0
-- **Endpoint**: `/api/...`
-
-Futuras versiones podrían incluir:
-- `/api/v2/chat`
-- `/api/v3/chat`
+- [IMPLEMENTATION_GUIDE.md](./IMPLEMENTATION_GUIDE.md) - Guía de implementación
+- [RAG_ARCHITECTURE.md](./RAG_ARCHITECTURE.md) - Arquitectura técnica
+- [SUPABASE_SETUP.md](./SUPABASE_SETUP.md) - Setup de base de datos
 
 ---
 
-## Soporte
-
-¿Preguntas o problemas con la API?
-
-- 📖 Consulta el [README.md](README.md)
-- 🐛 Reporta bugs en [GitHub Issues](https://github.com/tu-repo/issues)
-- 💬 Discusiones en [GitHub Discussions](https://github.com/tu-repo/discussions)
-
----
-
-**Última actualización**: Enero 2024
-
+**¿Preguntas o problemas?** Abre un issue en el repositorio.

@@ -5,9 +5,11 @@ yarn.lock
 
 # Environment variables
 .env
+.env.*
 .env.local
 .env.development
 .env.production
+.env.backup
 
 # Logs
 logs/
@@ -27,15 +29,9 @@ Thumbs.db
 *.swo
 *~
 
-# Testing
-coverage/
-.nyc_output/
-
-# Production
-dist/
-build/
-
 # Misc
 *.pem
 .cache/
+.vercel/
 
+.vercel

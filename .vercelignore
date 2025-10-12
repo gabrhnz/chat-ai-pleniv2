@@ -1,0 +1,14 @@
+node_modules
+.env
+.env.local
+.env.backup
+logs
+*.log
+.DS_Store
+scripts/test-*.js
+scripts/debug-*.js
+INSTRUCCIONES_COMPLETAS.md
+PARA_TI_GABRIEL.md
+START_HERE.md
+PROYECTO_COMPLETADO.md
+

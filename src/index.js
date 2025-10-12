@@ -11,6 +11,7 @@ import cors from 'cors';
 import config from './config/environment.js';
 import logger, { httpLogger } from './utils/logger.js';
 import chatRoutes from './routes/chat.routes.js';
+import adminRoutes from './routes/admin.routes.js';
 import { 
   errorHandler, 
   notFoundHandler 
@@ -87,6 +88,7 @@ const createApp = () => {
   
   // API routes
   app.use('/api', chatRoutes);
+  app.use('/api/admin', adminRoutes);
   
   // ============================================
   // Error Handling

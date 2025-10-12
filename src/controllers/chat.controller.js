@@ -2,9 +2,10 @@
  * Chat Controller
  * 
  * Maneja la lógica de negocio para los endpoints de chat.
- * Orquesta la interacción entre el request, el servicio de OpenAI, y la respuesta.
+ * Usa RAG (Retrieval-Augmented Generation) para responder con contexto de FAQs.
  */
 
+import { processRAGQuery } from '../services/rag.service.js';
 import openaiService from '../services/openai.service.js';
 import logger from '../utils/logger.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
@@ -14,66 +15,78 @@ import { asyncHandler } from '../middleware/errorHandler.js';
  * Procesa mensajes del usuario y retorna respuestas del chatbot
  */
 export const chatHandler = asyncHandler(async (req, res) => {
-  const { message, context = [], sessionId, userId } = req.body;
+  const { message, sessionId, userId, streaming = false } = req.body;
   
   // Log de la request (sin datos sensibles)
-  logger.info('Chat request received', {
+  logger.info('RAG chat request received', {
     messageLength: message.length,
-    contextLength: context.length,
     sessionId: sessionId || 'none',
     userId: userId || 'anonymous',
+    streaming,
     ip: req.ip,
   });
   
-  // TODO: Implementar gestión de sesiones
-  // Si sessionId está presente, recuperar contexto desde base de datos/cache
-  // if (sessionId) {
-  //   const sessionContext = await sessionService.getContext(sessionId);
-  //   context.push(...sessionContext);
-  // }
-  
-  // TODO: Implementar tracking de uso por usuario
-  // if (userId) {
-  //   await usageService.trackRequest(userId);
-  //   await usageService.checkQuota(userId);
-  // }
-  
-  // Llamar al servicio de OpenAI
-  const response = await openaiService.generateChatResponse(message, context);
-  
-  // TODO: Guardar conversación en base de datos para analytics/historial
-  // if (sessionId) {
-  //   await conversationService.saveMessage(sessionId, {
-  //     userMessage: message,
-  //     botReply: response.reply,
-  //     timestamp: new Date(),
-  //     tokens: response.usage,
-  //   });
-  // }
-  
-  // Construir respuesta
-  const responseData = {
-    reply: response.reply,
-    usage: response.usage,
-    // Información adicional útil para el cliente
-    metadata: {
-      model: response.model,
-      finishReason: response.finishReason,
-      timestamp: response.metadata.timestamp,
-    },
-  };
-  
-  // TODO: Para internacionalización, detectar idioma y ajustar respuesta
-  // if (req.body.language) {
-  //   responseData.language = req.body.language;
-  // }
-  
-  logger.info('Chat response sent', {
-    tokensUsed: response.usage.total_tokens,
-    duration: response.metadata.duration,
+  // Process query using RAG pipeline
+  const ragResponse = await processRAGQuery(message, {
+    streaming,
+    sessionId,
   });
   
-  res.status(200).json(responseData);
+  // Si es streaming, configurar SSE y stream la respuesta
+  if (streaming && ragResponse.streaming) {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    
+    // Send context/sources first
+    res.write(`data: ${JSON.stringify({
+      type: 'context',
+      sources: ragResponse.sources,
+    })}\n\n`);
+    
+    // Stream LLM response chunks
+    for await (const chunk of ragResponse.streaming) {
+      const content = chunk.choices[0]?.delta?.content || '';
+      if (content) {
+        res.write(`data: ${JSON.stringify({
+          type: 'chunk',
+          content,
+        })}\n\n`);
+      }
+    }
+    
+    // Send done signal
+    res.write(`data: ${JSON.stringify({
+      type: 'done',
+      metadata: ragResponse.metadata,
+    })}\n\n`);
+    
+    res.end();
+    
+  } else {
+    // Regular JSON response (non-streaming)
+    const responseData = {
+      reply: ragResponse.answer,
+      sources: ragResponse.sources.map(faq => ({
+        id: faq.id,
+        question: faq.question,
+        category: faq.category,
+        similarity: faq.similarity,
+      })),
+      metadata: {
+        ...ragResponse.metadata,
+        timestamp: new Date().toISOString(),
+      },
+    };
+    
+    logger.info('RAG chat response sent', {
+      faqsUsed: ragResponse.sources.length,
+      topSimilarity: ragResponse.metadata.topSimilarity,
+      duration: ragResponse.metadata.duration,
+    });
+    
+    res.status(200).json(responseData);
+  }
 });
 
 /**

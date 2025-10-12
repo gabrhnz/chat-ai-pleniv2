@@ -1,4 +1,5 @@
 {
+  "name": "plani-unc-backend",
   "version": 2,
   "builds": [
     {
