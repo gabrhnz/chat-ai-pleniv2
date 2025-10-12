@@ -161,12 +161,15 @@ const startServer = () => {
   }
 };
 
-// Iniciar servidor si este archivo es ejecutado directamente
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Crear la instancia de la app para Vercel
+const app = createApp();
+
+// Iniciar servidor solo en desarrollo local (no en Vercel)
+if (import.meta.url === `file://${process.argv[1]}` && !process.env.VERCEL) {
   startServer();
 }
 
-// Exportar para testing
+// Exportar para Vercel y testing
 export { createApp, startServer };
-export default createApp;
+export default app;
 
