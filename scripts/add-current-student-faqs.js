@@ -47,7 +47,7 @@ const currentStudentFAQs = [
   },
   {
     question: "como cambio de carrera",
-    answer: "Para cambiar de carrera debes: 1) Tener aprobado al menos el 50% de tus créditos actuales, 2) Solicitar el cambio por escrito a la dirección de asuntos estudiantiles, 3) Aprobar una entrevista con el coordinador de la nueva carrera, 4) Cumplir con los requisitos específicos de admisión de esa carrera. El proceso toma aproximadamente 2-3 semanas. 📝🔄",
+    answer: "El cambio de carrera solo es posible al **3er semestre**. Debes tener aprobado al menos el 50% de tus créditos actuales. Se validan únicamente las materias que estén **directamente relacionadas** con la nueva carrera. Solicítalo por escrito al coordinador de carrera y requiere aprobación del comité académico. No todos los cambios son posibles. 📝🔄",
     category: "sistema_academico",
     keywords: ["cambio carrera", "traslado", "cambiar especialidad"]
   },
