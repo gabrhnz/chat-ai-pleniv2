@@ -158,40 +158,46 @@ const currentStudentFAQs = [
     keywords: ["apelar calificación", "reclamo", "queja"]
   },
 
-  // === ACTIVIDADES ESTUDIANTILES (6 FAQs críticas) ===
+  // === ACTIVIDADES ESTUDIANTILES (6 FAQs críticas - CORREGIDAS) ===
   {
     question: "que clubes estudiantiles hay",
-    answer: "La UNC cuenta con diversos clubes estudiantiles: 1) Clubes académicos por carrera (Física, IA, etc.), 2) Clubes culturales (música, teatro, danza), 3) Clubes deportivos (fútbol, baloncesto), 4) Clubes sociales (medio ambiente, derechos humanos), 5) Clubes técnicos (robótica, programación). Consulta el centro de estudiantes para la lista completa. 🎭⚽",
+    answer: "Actualmente la UNC cuenta con actividades estudiantiles limitadas: 1) **Esgrima**, 2) **Ajedrez**, 3) **Ping pong**, y 4) **Laboratorio de idiomas**. Estas son las actividades disponibles actualmente. Para más información sobre participación o si hay nuevas actividades en desarrollo, consulta con el centro de estudiantes. 🎯",
     category: "actividades",
     keywords: ["clubes estudiantiles", "organización", "grupos"]
   },
   {
+    question: "que actividades extracurriculares hay",
+    answer: "Las actividades extracurriculares disponibles actualmente son: **Esgrima**, **Ajedrez**, **Ping pong** y **Laboratorio de idiomas**. Estas actividades buscan fomentar el desarrollo integral de los estudiantes en áreas deportivas y culturales. El centro de estudiantes coordina la participación. 🎾🏇",
+    category: "actividades",
+    keywords: ["actividades extracurriculares", "deportes", "cultura"]
+  },
+  {
     question: "como me uno a un club",
-    answer: "Para unirte a un club: 1) Asiste a las reuniones de inducción (inicio de semestre), 2) Contacta al presidente del club (info en centro de estudiantes), 3) Llena formulario de inscripción, 4) Asiste a las primeras reuniones. La mayoría son gratuitos y no requieren experiencia previa. 🤝📝",
+    answer: "Para participar en las actividades estudiantiles disponibles (esgrima, ajedrez, ping pong, laboratorio de idiomas): 1) Contacta al centro de estudiantes, 2) Expresa tu interés en la actividad específica, 3) Cumple con los requisitos básicos si los hay. Las actividades son abiertas a todos los estudiantes interesados. 🤝📝",
     category: "actividades",
     keywords: ["unirme club", "participar", "ingresar"]
   },
   {
     question: "hay eventos deportivos",
-    answer: "Sí, la UNC organiza eventos deportivos: 1) Torneos internos entre carreras, 2) Ligas estudiantiles (fútbol, baloncesto, voleibol), 3) Eventos recreativos (olimpiadas estudiantiles), 4) Participación en competencias universitarias. También hay instalaciones para actividades físicas individuales. ⚽🏀",
+    answer: "Los eventos deportivos se limitan a las actividades disponibles actualmente: torneos internos de **esgrima**, **ajedrez** y **ping pong**. No hay eventos masivos como ligas de fútbol o baloncesto. Para competencias universitarias, los estudiantes pueden participar de forma individual. ⚽🎾",
     category: "actividades",
     keywords: ["eventos deportivos", "deportes", "competiciones"]
   },
   {
     question: "que actividades culturales hay",
-    answer: "Actividades culturales incluyen: 1) Festivales de arte y música, 2) Grupos de teatro y danza, 3) Exposiciones estudiantiles, 4) Conciertos y presentaciones artísticas, 5) Eventos multiculturales, 6) Talleres de arte y creatividad. El centro cultural coordina la mayoría de las actividades. 🎨🎭",
+    answer: "Las actividades culturales disponibles actualmente se centran en el **laboratorio de idiomas**, donde los estudiantes pueden mejorar sus habilidades lingüísticas. No hay actualmente grupos de teatro, danza, música o exposiciones estudiantiles. El centro de estudiantes informa sobre cualquier actividad nueva. 📚🌍",
     category: "actividades",
     keywords: ["actividades culturales", "arte", "cultura"]
   },
   {
     question: "como organizo un evento estudiantil",
-    answer: "Para organizar un evento estudiantil: 1) Forma un comité organizador, 2) Obtén aprobación del centro de estudiantes, 3) Reserva espacios con antelación, 4) Gestiona presupuesto si aplica, 5) Cumple con regulaciones de seguridad. Eventos pequeños pueden ser más sencillos de aprobar. 📅🎉",
+    answer: "Para organizar un evento estudiantil: 1) Propón la idea al centro de estudiantes, 2) Obtén aprobación de las autoridades correspondientes, 3) Si es aprobado, coordina con el centro de estudiantes. Dado que las actividades están limitadas actualmente, las nuevas propuestas deben alinearse con las actividades disponibles (esgrima, ajedrez, ping pong, idiomas). 📅🎉",
     category: "actividades",
     keywords: ["organizar evento", "evento estudiantil", "planear"]
   },
   {
     question: "hay voluntariado disponible",
-    answer: "Sí, oportunidades de voluntariado incluyen: 1) Programas comunitarios (educación, salud), 2) Proyectos ambientales, 3) Apoyo a comunidades vulnerables, 4) Eventos universitarios, 5) Proyectos de investigación social. Contacta al centro de voluntariado o consulta el portal estudiantil para oportunidades actuales. 🤝🌱",
+    answer: "Las oportunidades de voluntariado son limitadas actualmente. Los estudiantes interesados pueden explorar opciones a través del centro de estudiantes o proponer iniciativas relacionadas con las actividades disponibles (esgrima, ajedrez, ping pong, laboratorio de idiomas). No hay programas formales de voluntariado comunitario activos. 🤝🌱",
     category: "actividades",
     keywords: ["voluntariado", "voluntario", "comunidad"]
   }
