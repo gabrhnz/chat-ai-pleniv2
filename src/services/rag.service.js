@@ -107,6 +107,9 @@ export async function processRAGQuery(userQuery, options = {}) {
       searchParams: `${searchParams.topK}k-${searchParams.threshold}t`
     });
     
+    // Determine if we have good context or not
+    const hasGoodContext = similarFAQs.length > 0 && similarFAQs[0].similarity >= SIMILARITY_THRESHOLD;
+    
     const context = assembleContext(similarFAQs, userQuery, failedAttempts);
     
     // Step 4: Generate response with LLM (usar query original)
