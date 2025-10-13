@@ -1,90 +1,39 @@
 /**
  * Embeddings Service
  * 
- * Servicio para generar embeddings de texto usando modelo local (sentence-transformers).
- * Los embeddings son vectores de 512 dimensiones usados para búsqueda semántica.
+ * Servicio para generar embeddings de texto usando Hugging Face.
+ * Los embeddings son vectores de 384 dimensiones usados para búsqueda semántica.
  */
 
-import { spawn } from 'child_process';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import { HfInference } from '@huggingface/inference';
 import logger from '../utils/logger.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-// Configuración específica para embeddings locales
+// Configuración para Hugging Face embeddings
 const EMBEDDING_MODEL = 'sentence-transformers/all-MiniLM-L6-v2';
 const EMBEDDING_DIMENSIONS = 384;
 const MAX_TOKENS_PER_EMBEDDING = 8191;
+const TIMEOUT_MS = 30000; // 30 seconds timeout
 
-// Path al script de Python
-const PYTHON_SCRIPT = join(__dirname, '../../scripts/embedding-server.py');
+// Initialize Hugging Face client
+const hf = new HfInference(process.env.HUGGINGFACE_API_KEY);
 
 /**
- * Ejecuta el script de Python para generar embeddings
- * @param {string[]} texts - Textos a procesar
- * @returns {Promise<number[][]>} - Array de embeddings
+ * Helper function to add timeout to promises
  */
-async function callPythonEmbedding(texts) {
-  return new Promise((resolve, reject) => {
-    const python = spawn('python3', [PYTHON_SCRIPT]);
-    
-    let stdout = '';
-    let stderr = '';
-    
-    // Capturar stdout
-    python.stdout.on('data', (data) => {
-      stdout += data.toString();
-    });
-    
-    // Capturar stderr (logs del modelo)
-    python.stderr.on('data', (data) => {
-      stderr += data.toString();
-    });
-    
-    // Manejar errores
-    python.on('error', (error) => {
-      reject(new Error(`Failed to start Python process: ${error.message}`));
-    });
-    
-    // Manejar cierre del proceso
-    python.on('close', (code) => {
-      if (code !== 0) {
-        logger.error('Python embedding script failed', {
-          code,
-          stderr,
-        });
-        reject(new Error(`Python script exited with code ${code}: ${stderr}`));
-        return;
-      }
-      
-      try {
-        const result = JSON.parse(stdout);
-        
-        if (result.error) {
-          reject(new Error(result.error));
-          return;
-        }
-        
-        resolve(result.embeddings);
-      } catch (error) {
-        reject(new Error(`Failed to parse Python output: ${error.message}`));
-      }
-    });
-    
-    // Enviar datos al proceso Python
-    const input = JSON.stringify({ texts });
-    python.stdin.write(input);
-    python.stdin.end();
-  });
+function withTimeout(promise, timeoutMs = TIMEOUT_MS, operation = 'Operation') {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error(`${operation} timed out after ${timeoutMs}ms`)), timeoutMs)
+    )
+  ]);
 }
 
 /**
- * Generate embedding for a single text
+ * Generate embedding for a single text using Hugging Face
  * 
  * @param {string} text - Text to embed
- * @returns {Promise<number[]>} - Embedding vector (512 dimensions)
+ * @returns {Promise<number[]>} - Embedding vector (384 dimensions)
  */
 export async function generateEmbedding(text) {
   if (!text || typeof text !== 'string' || text.trim().length === 0) {
@@ -97,9 +46,17 @@ export async function generateEmbedding(text) {
     // Clean and truncate text if necessary
     const cleanText = cleanTextForEmbedding(text);
     
-    // Llamar al modelo local
-    const embeddings = await callPythonEmbedding([cleanText]);
-    const embedding = embeddings[0];
+    console.log(`⏳ Generating embedding with ${TIMEOUT_MS/1000}s timeout...`);
+    
+    // Call Hugging Face API with timeout
+    const embedding = await withTimeout(
+      hf.featureExtraction({
+        model: EMBEDDING_MODEL,
+        inputs: cleanText,
+      }),
+      TIMEOUT_MS,
+      'Hugging Face embedding generation'
+    );
     
     const duration = Date.now() - startTime;
     
@@ -108,7 +65,7 @@ export async function generateEmbedding(text) {
       throw new Error(`Invalid embedding dimensions: expected ${EMBEDDING_DIMENSIONS}, got ${embedding?.length}`);
     }
     
-    logger.info('Embedding generated (local model)', {
+    logger.info('Embedding generated (Hugging Face)', {
       textLength: cleanText.length,
       dimensions: embedding.length,
       duration: `${duration}ms`,
@@ -118,23 +75,35 @@ export async function generateEmbedding(text) {
     return embedding;
     
   } catch (error) {
-    logger.error('Failed to generate embedding', {
-      error: error.message,
-      textLength: text.length,
-      model: EMBEDDING_MODEL,
-    });
+    const errorMsg = error.message || 'Unknown error';
+    
+    if (errorMsg.includes('timeout')) {
+      console.error(`❌ TIMEOUT after ${TIMEOUT_MS/1000}s - Hugging Face API too slow`);
+      logger.error('Embedding generation timeout', {
+        error: errorMsg,
+        timeout: `${TIMEOUT_MS}ms`,
+        textLength: text.length,
+      });
+    } else {
+      console.error(`❌ ERROR: ${errorMsg}`);
+      logger.error('Failed to generate embedding', {
+        error: errorMsg,
+        textLength: text.length,
+        model: EMBEDDING_MODEL,
+      });
+    }
     throw error;
   }
 }
 
 /**
- * Generate embeddings for multiple texts (batch)
+ * Generate embeddings for multiple texts (batch) using Hugging Face
  * 
  * @param {string[]} texts - Array of texts to embed
- * @param {number} batchSize - Number of texts per batch (default: 50)
+ * @param {number} batchSize - Number of texts per batch (default: 10)
  * @returns {Promise<number[][]>} - Array of embedding vectors
  */
-export async function generateEmbeddingsBatch(texts, batchSize = 50) {
+export async function generateEmbeddingsBatch(texts, batchSize = 10) {
   if (!Array.isArray(texts) || texts.length === 0) {
     throw new Error('Texts must be a non-empty array');
   }
@@ -143,31 +112,42 @@ export async function generateEmbeddingsBatch(texts, batchSize = 50) {
   const results = [];
   
   try {
-    // Process in batches
-    for (let i = 0; i < texts.length; i += batchSize) {
-      const batch = texts.slice(i, i + batchSize);
-      const cleanBatch = batch.map(cleanTextForEmbedding);
+    // Process one at a time for Hugging Face (more reliable)
+    for (let i = 0; i < texts.length; i++) {
+      const cleanText = cleanTextForEmbedding(texts[i]);
       
-      // Llamar al modelo local
-      const embeddings = await callPythonEmbedding(cleanBatch);
-      results.push(...embeddings);
+      console.log(`⏳ Processing ${i + 1}/${texts.length} with ${TIMEOUT_MS/1000}s timeout...`);
       
-      logger.info('Batch embeddings generated (local model)', {
-        batchIndex: Math.floor(i / batchSize) + 1,
-        batchSize: batch.length,
-        totalProcessed: results.length,
-        totalItems: texts.length,
-      });
+      // Call Hugging Face API with timeout
+      const embedding = await withTimeout(
+        hf.featureExtraction({
+          model: EMBEDDING_MODEL,
+          inputs: cleanText,
+        }),
+        TIMEOUT_MS,
+        `Embedding ${i + 1}/${texts.length}`
+      );
       
-      // Small delay between batches
-      if (i + batchSize < texts.length) {
-        await new Promise(resolve => setTimeout(resolve, 100));
+      results.push(embedding);
+      
+      // Log progress every 10 items
+      if ((i + 1) % 10 === 0 || i === texts.length - 1) {
+        logger.info('Batch embeddings generated (Hugging Face)', {
+          totalProcessed: results.length,
+          totalItems: texts.length,
+          progress: `${Math.round((results.length / texts.length) * 100)}%`,
+        });
+      }
+      
+      // Small delay between requests to respect rate limits
+      if (i < texts.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 200));
       }
     }
     
     const duration = Date.now() - startTime;
     
-    logger.info('All embeddings generated (local model)', {
+    logger.info('All embeddings generated (Hugging Face)', {
       totalCount: results.length,
       duration: `${duration}ms`,
       averagePerItem: `${Math.round(duration / results.length)}ms`,
@@ -176,11 +156,25 @@ export async function generateEmbeddingsBatch(texts, batchSize = 50) {
     return results;
     
   } catch (error) {
-    logger.error('Failed to generate batch embeddings', {
-      error: error.message,
-      totalTexts: texts.length,
-      processedCount: results.length,
-    });
+    const errorMsg = error.message || 'Unknown error';
+    
+    if (errorMsg.includes('timeout')) {
+      console.error(`❌ BATCH TIMEOUT after ${TIMEOUT_MS/1000}s`);
+      console.error(`   Processed: ${results.length}/${texts.length}`);
+      logger.error('Batch embedding generation timeout', {
+        error: errorMsg,
+        timeout: `${TIMEOUT_MS}ms`,
+        totalTexts: texts.length,
+        processedCount: results.length,
+      });
+    } else {
+      console.error(`❌ BATCH ERROR: ${errorMsg}`);
+      logger.error('Failed to generate batch embeddings', {
+        error: errorMsg,
+        totalTexts: texts.length,
+        processedCount: results.length,
+      });
+    }
     throw error;
   }
 }
