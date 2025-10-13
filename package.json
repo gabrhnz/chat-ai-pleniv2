@@ -14,6 +14,7 @@
     "init:embeddings": "node scripts/setup/init-embeddings.js",
     "init:embeddings:force": "node scripts/setup/init-embeddings.js --force",
     "add:faq": "node scripts/agregar-faqs.js",
+    "insert:faqs": "node scripts/insert-faqs.js",
     "debug:database": "node scripts/maintenance/debug-database.js",
     "test:chat": "node scripts/tests/test-chat.js",
     "load:sample": "node scripts/data/load-sample-data.js",

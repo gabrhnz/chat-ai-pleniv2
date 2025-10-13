@@ -1,0 +1,344 @@
+[
+  {
+    "question": "que eres",
+    "answer": "Soy una IA creada por la comunidad para ayudar a estudiantes interesados en la UNC. No tengo relación oficial con la universidad - soy un proyecto comunitario que proporciona información basada en datos públicos. 🤖💬",
+    "category": "general",
+    "keywords": ["que eres", "quien eres", "que bot"],
+    "metadata": {
+      "source": "bot-presentation-community-project",
+      "type": "bot-identity-correction",
+      "priority": "critical",
+      "bot_presentation": true
+    },
+    "created_by": "production-fix-script",
+    "is_active": true
+  },
+  {
+    "question": "eres oficial de la universidad",
+    "answer": "No, no soy oficial de la UNC. Soy un proyecto comunitario creado por estudiantes y miembros de la comunidad para ayudar a otros estudiantes con información sobre la universidad. Toda la información que doy viene de fuentes públicas. 🤖💬",
+    "category": "general",
+    "keywords": ["oficial", "universidad", "representante"],
+    "metadata": {
+      "source": "bot-presentation-community-project",
+      "type": "bot-identity-correction",
+      "priority": "critical",
+      "bot_presentation": true
+    },
+    "created_by": "production-fix-script",
+    "is_active": true
+  },
+  {
+    "question": "quien te creo",
+    "answer": "Fui creado por la comunidad estudiantil como un proyecto colaborativo para ayudar a estudiantes interesados en la UNC. No soy parte de la administración universitaria oficial. 🤖💬",
+    "category": "general",
+    "keywords": ["quien te creo", "creado por", "desarrollado por"],
+    "metadata": {
+      "source": "bot-presentation-community-project",
+      "type": "bot-identity-correction",
+      "priority": "critical",
+      "bot_presentation": true
+    },
+    "created_by": "production-fix-script",
+    "is_active": true
+  },
+  {
+    "question": "eres parte de la unc",
+    "answer": "No, no soy parte oficial de la UNC. Soy un proyecto independiente de la comunidad que ayuda con información sobre la universidad. Proporciona datos basados en fuentes públicas disponibles. 🤖💬",
+    "category": "general",
+    "keywords": ["parte unc", "oficial", "perteneces"],
+    "metadata": {
+      "source": "bot-presentation-community-project",
+      "type": "bot-identity-correction",
+      "priority": "critical",
+      "bot_presentation": true
+    },
+    "created_by": "production-fix-script",
+    "is_active": true
+  },
+  {
+    "question": "hola",
+    "answer": "¡Hola! Soy una IA creada por la comunidad para ayudarte con información sobre la Universidad Nacional de las Ciencias (UNC). No soy oficial de la universidad, solo un proyecto comunitario útil. ¿En qué te puedo ayudar? 🤖💬",
+    "category": "general",
+    "keywords": ["hola", "saludos", "buenos dias"],
+    "metadata": {
+      "source": "bot-presentation-community-project",
+      "type": "bot-identity-correction",
+      "priority": "critical",
+      "bot_presentation": true
+    },
+    "created_by": "production-fix-script",
+    "is_active": true
+  },
+  {
+    "question": "buenos dias",
+    "answer": "¡Buenos días! Soy un asistente comunitario sobre la UNC, creado por estudiantes para estudiantes. No soy parte oficial de la universidad. ¿Qué información necesitas? 🤖💬",
+    "category": "general",
+    "keywords": ["buenos dias", "buenas tardes", "buenas noches"],
+    "metadata": {
+      "source": "bot-presentation-community-project",
+      "type": "bot-identity-correction",
+      "priority": "critical",
+      "bot_presentation": true
+    },
+    "created_by": "production-fix-script",
+    "is_active": true
+  },
+  {
+    "question": "que haces",
+    "answer": "Ayudo con información sobre la UNC basada en datos públicos. Respondo preguntas sobre carreras, admisión, costos, instalaciones, etc. Soy un proyecto comunitario, no oficial de la universidad. 🤖💬",
+    "category": "general",
+    "keywords": ["que haces", "funciones", "ayudas"],
+    "metadata": {
+      "source": "bot-presentation-community-project",
+      "type": "bot-identity-correction",
+      "priority": "critical",
+      "bot_presentation": true
+    },
+    "created_by": "production-fix-script",
+    "is_active": true
+  },
+  {
+    "question": "de donde vienes",
+    "answer": "Soy un proyecto creado por la comunidad estudiantil venezolana para ayudar a otros estudiantes interesados en la UNC. No tengo relación oficial con la universidad. 🤖💬",
+    "category": "general",
+    "keywords": ["origen", "de donde", "creado"],
+    "metadata": {
+      "source": "bot-presentation-community-project",
+      "type": "bot-identity-correction",
+      "priority": "critical",
+      "bot_presentation": true
+    },
+    "created_by": "production-fix-script",
+    "is_active": true
+  },
+  {
+    "question": "hay becas",
+    "answer": "La UNC ofrece ayudas estudiantiles limitadas basadas en rendimiento académico y necesidad socioeconómica. No ofrecemos becas que cubran el 100% de los costos. Las ayudas disponibles son parciales y están sujetas a disponibilidad presupuestaria y cumplimiento de requisitos específicos. Para más información sobre criterios y proceso de solicitud, contacta a la oficina de asuntos estudiantiles. 💰📚",
+    "category": "finanzas",
+    "keywords": ["becas", "ayudas", "financiamiento", "estudiantiles"],
+    "metadata": {
+      "source": "scholarships-hallucination-fix",
+      "type": "hallucination-correction",
+      "priority": "critical",
+      "fix_for": "scholarships-information"
+    },
+    "created_by": "scholarships-fix",
+    "is_active": true
+  },
+  {
+    "question": "cuanto promedio necesito para entrar en la carrera de ia",
+    "answer": "Para la Ingeniería en Inteligencia Artificial, que es una carrera muy demandada, necesitas un promedio alto en bachillerato. Generalmente se requiere entre 15-18 puntos sobre 20 como máximo posible. La competencia es alta, por lo que se recomienda un promedio excelente en matemáticas y ciencias. Los requisitos incluyen título de bachiller, notas certificadas y cédula de identidad. 📊🤖",
+    "category": "admisiones",
+    "keywords": ["promedio IA", "requisitos IA", "entrar ingeniería IA", "puntos IA"],
+    "metadata": {
+      "source": "ia-admission-requirements-hallucination-fix",
+      "type": "hallucination-correction",
+      "priority": "critical",
+      "fix_for": "ia-admission-requirements"
+    },
+    "created_by": "ia-admission-fix",
+    "is_active": true
+  },
+  {
+    "question": "cuándo son las próximas fechas de inscripción",
+    "answer": "Las inscripciones en la UNC abren en enero y julio de cada año. Las fechas específicas se anunciarán próximamente. Para inscribirte necesitas: 1) **Título de bachiller original**, 2) **Notas certificadas originales**, 3) **Cédula de identidad original**, y 4) **Certificado de participación OPSU**. Mantente atento a los anuncios oficiales para más detalles. 📅📋",
+    "category": "admisiones",
+    "keywords": ["inscripciones", "fechas", "requisitos", "documentos", "inscribirte"],
+    "metadata": {
+      "source": "admission-requirements-hallucination-fix",
+      "type": "hallucination-correction",
+      "priority": "critical",
+      "fix_for": "admission-documents"
+    },
+    "created_by": "admission-requirements-fix",
+    "is_active": true
+  },
+  {
+    "question": "hay residencias estudiantiles disponibles",
+    "answer": "Sí, la UNC ofrece residencias estudiantiles con las siguientes condiciones: 1) **Por promedio académico**: Estudiantes con promedio entre 18-20 puntos, 2) **Por CAIU**: Puntaje mayor a 16 puntos en el Centro de Atención e Información Universitaria. Las residencias son limitadas y NO están garantizadas. Son válidas para estudiantes de cualquier estado de Venezuela EXCEPTO Distrito Capital, La Guaira y Miranda. Para más información, contacta al departamento de asuntos estudiantiles. 🏠📚",
+    "category": "instalaciones",
+    "keywords": ["residencias estudiantiles", "alojamiento", "residencia", "vivienda", "dormitorio"],
+    "metadata": {
+      "source": "residence-hallucination-fix",
+      "type": "hallucination-correction",
+      "priority": "critical",
+      "fix_for": "residence-information"
+    },
+    "created_by": "residence-fix",
+    "is_active": true
+  },
+  {
+    "question": "la universidad ofrece programas de postgrado o maestrías",
+    "answer": "Actualmente la UNC NO ofrece programas de postgrado o maestrías. La universidad se enfoca exclusivamente en carreras de pre-grado (licenciaturas e ingenierías). Los estudiantes que deseen continuar con estudios de postgrado deben buscar oportunidades en otras instituciones universitarias. Para información sobre posibles futuros programas, contacta a la dirección académica. 📚🎓",
+    "category": "academico",
+    "keywords": ["postgrado", "maestrías", "doctorado", "post-grado", "especialización"],
+    "metadata": {
+      "source": "postgraduate-hallucination-fix",
+      "type": "hallucination-correction",
+      "priority": "critical",
+      "fix_for": "postgraduate-programs"
+    },
+    "created_by": "postgraduate-fix",
+    "is_active": true
+  },
+  {
+    "question": "hay oportunidades de intercambio estudiantil internacional",
+    "answer": "La UNC tiene cooperación internacional activa con universidades en **China, Rusia e Irán**. Estas oportunidades incluyen programas de intercambio estudiantil y prácticas internacionales en diversas carreras científicas y tecnológicas. Se requiere un promedio mínimo de 16/20 para participar. No hay convenios formales con universidades de USA, España o Brasil actualmente. Para más información sobre oportunidades disponibles, contacta a la oficina de relaciones internacionales. 🌏",
+    "category": "internacional",
+    "keywords": ["intercambio estudiantil", "internacional", "convenios", "cooperación", "prácticas"],
+    "metadata": {
+      "source": "international-exchange-hallucination-fix",
+      "type": "hallucination-correction",
+      "priority": "critical",
+      "fix_for": "international-cooperation"
+    },
+    "created_by": "international-exchange-fix",
+    "is_active": true
+  },
+  {
+    "question": "el transporte es un problema",
+    "answer": "La UNC sí ofrece transporte universitario que sale desde distintos puntos. Para verificar las rutas actuales y horarios, lo mejor es consultar directamente en la universidad. El transporte facilita el acceso desde varias zonas, pero también puedes usar transporte público o carritos por_apps. 🚇🚌",
+    "category": "ubicacion",
+    "keywords": ["transporte", "autobuses", "carritos", "metro", "llegar"],
+    "metadata": {
+      "source": "transport-hallucination-fix",
+      "type": "hallucination-correction",
+      "priority": "critical",
+      "fix_for": "transport-information"
+    },
+    "created_by": "transport-fix",
+    "is_active": true
+  },
+  {
+    "question": "la uni tiene autobuses",
+    "answer": "Sí, la UNC ofrece transporte universitario oficial desde distintos puntos. Los horarios y paradas pueden cambiar, por lo que lo mejor es verificar directamente en la universidad. Es una buena opción además del transporte público y carritos por_apps. 🚗🚌",
+    "category": "ubicacion",
+    "keywords": ["autobuses", "transporte universitario", "bus", "ruta"],
+    "metadata": {
+      "source": "transport-hallucination-fix",
+      "type": "hallucination-correction",
+      "priority": "critical",
+      "fix_for": "transport-information"
+    },
+    "created_by": "transport-fix",
+    "is_active": true
+  },
+  {
+    "question": "que tan arrecho es el nivel de exigencia",
+    "answer": "El nivel es bien exigente pero no te rajan fácil. Hay que estudiar sí o sí, pero con organización y dedicación se puede. No es de esos sitios donde te botan por cualquier cosa, pero tampoco puedes estar echando bola. Depende de tu carrera y actitud. 💪📚",
+    "category": "general",
+    "keywords": ["exigencia", "nivel", "difícil", "rajarse", "echar bola"],
+    "metadata": {
+      "source": "venezuelan-slang-corrected",
+      "type": "venezuelan-slang",
+      "language_style": "venezuelan-colloquial"
+    },
+    "created_by": "venezuelan-faqs-fix",
+    "is_active": true
+  },
+  {
+    "question": "se puede sobrevivir echando bola",
+    "answer": "No, no se puede sobrevivir echando bola. Hay que estudiar y dedicar tiempo. Algunas carreras son más intensas que otras, pero en general requiere esfuerzo. Si quieres graduarte tranquilo, mejor ponte las pilas desde el principio. No es imposible pero tampoco es gratis. 💪📖",
+    "category": "general",
+    "keywords": ["echar bola", "sobrevivir", "estudiar", "esfuerzo", "pilas"],
+    "metadata": {
+      "source": "venezuelan-slang-corrected",
+      "type": "venezuelan-slang",
+      "language_style": "venezuelan-colloquial"
+    },
+    "created_by": "venezuelan-faqs-fix",
+    "is_active": true
+  },
+  {
+    "question": "que tan dificil es entrar ahi",
+    "answer": "Depende de la carrera, pero en general piden un buen promedio de bachillerato (15-18 puntos). No es tan arrecho como medicina, pero tampoco entran todos. Hacen una prueba de aptitud y revisan tu expediente. Si tienes buen promedio y pasas la prueba, tienes chances. 🎯📝",
+    "category": "admisiones",
+    "keywords": ["difícil entrar", "promedio", "prueba", "bachillerato"],
+    "metadata": {
+      "source": "venezuelan-slang-corrected",
+      "type": "venezuelan-slang",
+      "language_style": "venezuelan-colloquial"
+    },
+    "created_by": "venezuelan-faqs-fix",
+    "is_active": true
+  },
+  {
+    "question": "piden un promedio arrecho",
+    "answer": "Piden un promedio decente de bachillerato, generalmente 15-18 puntos dependiendo de la carrera. Las más competitivas como IA o Física piden más alto. No es 20 perfecto, pero tampoco pasan con 12. Si tienes buen expediente académico, tienes oportunidades. 📊🎓",
+    "category": "admisiones",
+    "keywords": ["promedio arrecho", "puntos", "bachillerato", "competitivo"],
+    "metadata": {
+      "source": "venezuelan-slang-corrected",
+      "type": "venezuelan-slang",
+      "language_style": "venezuelan-colloquial"
+    },
+    "created_by": "venezuelan-faqs-fix",
+    "is_active": true
+  },
+  {
+    "question": "con 15 puntitos me la juego",
+    "answer": "Con 15 puntos tienes chances en algunas carreras, pero en las más demandadas (IA, Ciberseguridad) compites con promedios más altos. Depende de la demanda de la carrera ese año y tu rendimiento en la prueba de aptitud. No está garantizado pero tienes oportunidades. 🎲📈",
+    "category": "admisiones",
+    "keywords": ["15 puntos", "chances", "oportunidades", "jugarla"],
+    "metadata": {
+      "source": "venezuelan-slang-corrected",
+      "type": "venezuelan-slang",
+      "language_style": "venezuelan-colloquial"
+    },
+    "created_by": "venezuelan-faqs-fix",
+    "is_active": true
+  },
+  {
+    "question": "oye el transporte es un problema",
+    "answer": "La UNC ofrece transporte universitario oficial desde distintos puntos, así que no es tanto problema. Si vienes de Caracas está bien porque hay metro cercano. Si vienes de afuera, puedes usar el transporte universitario o planear bien cómo llegar. Hay rutas de autobuses, carritos y el servicio oficial de la universidad. 🚇🚌",
+    "category": "ubicacion",
+    "keywords": ["transporte problema", "complicado", "llegar", "dificultad"],
+    "metadata": {
+      "source": "venezuelan-slang-corrected",
+      "type": "venezuelan-slang",
+      "language_style": "venezuelan-colloquial"
+    },
+    "created_by": "venezuelan-faqs-fix",
+    "is_active": true
+  },
+  {
+    "question": "uno tiene que buscarse la vida con los carritos",
+    "answer": "No necesariamente, la UNC ofrece transporte universitario oficial desde distintos puntos. También puedes usar carritos por_apps, transporte público o el transporte universitario. Para las rutas más actualizadas, consulta directamente en la universidad. Hay varias opciones disponibles. 🚗📱",
+    "category": "ubicacion",
+    "keywords": ["carritos", "buscarse la vida", "transporte informal", "apps"],
+    "metadata": {
+      "source": "venezuelan-slang-corrected",
+      "type": "venezuelan-slang",
+      "language_style": "venezuelan-colloquial"
+    },
+    "created_by": "venezuelan-faqs-fix",
+    "is_active": true
+  },
+  {
+    "question": "que carreras ofrecen",
+    "answer": "La UNC ofrece diversas carreras en áreas de ciencias, tecnología, ingeniería y ciencias sociales. Entre las más destacadas están: Ingeniería en Inteligencia Artificial, Ingeniería Civil, Ingeniería Eléctrica, Licenciatura en Física, Licenciatura en Matemáticas, Licenciatura en Biología, y muchas más. Para ver la lista completa actualizada, visita unc.edu.ve o contacta a admisiones. 📚🎓",
+    "category": "carreras",
+    "keywords": ["carreras", "programas", "ingenierías", "licenciaturas", "oferta académica"],
+    "metadata": {
+      "source": "basic-careers-info",
+      "type": "essential-information",
+      "priority": "high"
+    },
+    "created_by": "basic-careers-faq",
+    "is_active": true
+  },
+  {
+    "question": "hay canchas",
+    "answer": "Sí, hay canchas deportivas en construcción, incluyendo canchas de básquet. No se sabe aún cuándo estarán completamente listas. 🏀🏗️",
+    "category": "instalaciones",
+    "keywords": ["canchas", "deportivas", "basquet", "basketball", "construccion"],
+    "metadata": {
+      "source": "sports-facilities-info",
+      "type": "facilities-information",
+      "priority": "medium",
+      "status": "under-construction"
+    },
+    "created_by": "sports-facilities-faq",
+    "is_active": true
+  }
+]
