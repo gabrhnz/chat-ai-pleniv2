@@ -154,6 +154,18 @@ const criticalFAQs = [
       type: "essential-information",
       priority: "high"
     }
+  },
+  {
+    question: "hay canchas",
+    answer: "Sí, hay canchas deportivas en construcción, incluyendo canchas de básquet. No se sabe aún cuándo estarán completamente listas. 🏀🏗️",
+    category: "instalaciones",
+    keywords: ["canchas", "deportivas", "basquet", "basketball", "construccion"],
+    metadata: {
+      source: "sports-facilities-info",
+      type: "facilities-information",
+      priority: "medium",
+      status: "under-construction"
+    }
   }
 ];
 
