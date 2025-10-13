@@ -33,13 +33,13 @@ const supabase = createClient(
 const missingCriticalFAQs = [
   {
     question: "el transporte es un problema",
-    answer: "El transporte puede ser un poco jodido. La UNC está cerca de rutas de metro y autobuses, pero muchos estudiantes usan carritos por_apps o transporte público. No hay autobuses universitarios oficiales, tienes que buscarte la vida. Está bien conectado pero depende de dónde vengas. 🚇🚌",
+    answer: "La UNC sí ofrece transporte universitario que sale desde distintos puntos. Para verificar las rutas actuales y horarios, lo mejor es consultar directamente en la universidad. El transporte facilita el acceso desde varias zonas, pero también puedes usar transporte público o carritos por_apps. 🚇🚌",
     category: "ubicacion",
     keywords: ["transporte", "autobuses", "carritos", "metro", "llegar"]
   },
   {
     question: "la uni tiene autobuses",
-    answer: "No, la UNC no tiene autobuses universitarios oficiales. Tienes que usar transporte público (metro, autobuses, carritos por_apps). Está cerca de rutas principales, pero muchos estudiantes vienen en carros particulares o transporte informal. No es el mejor sistema pero funciona. 🚗🚌",
+    answer: "Sí, la UNC ofrece transporte universitario oficial con rutas desde distintos puntos. Los horarios y paradas pueden cambiar, por lo que lo mejor es verificar directamente en la universidad. Es una buena opción además del transporte público y carritos por_apps. 🚗🚌",
     category: "ubicacion",
     keywords: ["autobuses", "transporte universitario", "bus", "ruta"]
   },
@@ -81,13 +81,13 @@ const missingCriticalFAQs = [
   },
   {
     question: "oye el transporte es un problema",
-    answer: "El transporte es relativo. Si vienes de Caracas está bien porque hay metro cercano. Si vienes de afuera, tienes que planear bien cómo llegar. No hay transporte oficial de la uni, pero hay rutas de autobuses y carritos. Algunos estudiantes hacen pool o usan transporte público. 🚇🚌",
+    answer: "La UNC ofrece transporte universitario oficial desde distintos puntos, así que no es tanto problema. Si vienes de Caracas está bien porque hay metro cercano. Si vienes de afuera, puedes usar el transporte universitario o planear bien cómo llegar. Hay rutas de autobuses, carritos y el servicio oficial de la universidad. 🚇🚌",
     category: "ubicacion",
     keywords: ["transporte problema", "complicado", "llegar", "dificultad"]
   },
   {
     question: "uno tiene que buscarse la vida con los carritos",
-    answer: "Sí, básicamente tienes que buscarte la vida con carritos por_apps, autobuses o metro. La uni no tiene transporte oficial, así que la mayoría usa transporte informal o público. Está cerca de rutas principales pero hay que organizarse. No es el mejor pero es lo que hay. 🚗📱",
+    answer: "No necesariamente, la UNC ofrece transporte universitario oficial desde distintos puntos. También puedes usar carritos por_apps, transporte público o el transporte universitario. Para las rutas más actualizadas, consulta directamente en la universidad. Hay varias opciones disponibles. 🚗📱",
     category: "ubicacion",
     keywords: ["carritos", "buscarse la vida", "transporte informal", "apps"]
   }
