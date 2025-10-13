@@ -34,4 +34,11 @@ Thumbs.db
 .cache/
 .vercel/
 
+# Archivos temporales generados
+generated-faqs*.json
+faqs-review*.json
+faqs-*.json
+temp-*/
+*.txt
+
 .vercel

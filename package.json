@@ -17,7 +17,13 @@
     "debug:database": "node scripts/debug-database.js",
     "test:chat": "node scripts/test-chat.js",
     "load:sample": "node scripts/load-sample-data.js",
-    "test:local": "node scripts/test-local.js"
+    "test:local": "node scripts/test-local.js",
+    "scrape:web": "node scripts/scrape-unc-website.js",
+    "insert:scraped": "node scripts/insert-generated-faqs.js",
+    "import:sql": "node scripts/import-sql-faqs.js",
+    "add:conversational": "node scripts/add-conversational-faqs.js",
+    "review:faqs": "node scripts/review-and-clean-faqs.js",
+    "delete:marked": "node scripts/delete-marked-faqs.js"
   },
   "keywords": [
     "rag",
@@ -33,11 +39,20 @@
     "university",
     "knowledge-base"
   ],
-  "author": "",
+  "author": {
+    "name": "Gabriel Hernández",
+    "url": "https://www.gabrhnz.dev/"
+  },
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gabrhnz/chat-ai-pleniv2"
+  },
   "dependencies": {
     "@huggingface/inference": "^4.11.1",
     "@supabase/supabase-js": "^2.39.0",
+    "axios": "^1.12.2",
+    "cheerio": "^1.1.2",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",

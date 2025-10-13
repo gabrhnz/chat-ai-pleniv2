@@ -12,6 +12,7 @@ import { supabase } from '../config/supabase.js';
 // Importar ambos servicios de embeddings
 import * as embeddingsLocal from './embeddings.service.js';
 import * as embeddingsCloud from './embeddings.service.cloud.js';
+import { expandQuerySimple } from './query-expansion.service.js';
 import OpenAI from 'openai';
 import config from '../config/environment.js';
 import logger from '../utils/logger.js';
@@ -28,34 +29,33 @@ const MAX_CONTEXT_LENGTH = parseInt(process.env.MAX_CONTEXT_LENGTH || '3000', 10
 /**
  * Main RAG Pipeline
  * 
- * @param {string} query - User question
+ * @param {string} userQuery - User question
  * @param {Object} options - Optional configuration
  * @returns {Promise<Object>} - Response with answer, sources, metadata
  */
-export async function processRAGQuery(query, options = {}) {
+export async function processRAGQuery(userQuery, options = {}) {
   const startTime = Date.now();
-  const {
-    topK = TOP_K_RESULTS,
-    similarityThreshold = SIMILARITY_THRESHOLD,
-    streaming = false,
-    sessionId = null,
-  } = options;
+  const { streaming = false, sessionId = null } = options;
+  
+  // Expandir consulta ambigua
+  const queryExpansion = expandQuerySimple(userQuery);
+  const searchQuery = queryExpansion.expanded;
+  
+  logger.info('Processing RAG query', {
+    originalQuery: userQuery.substring(0, 100),
+    expandedQuery: queryExpansion.wasExpanded ? searchQuery : 'not expanded',
+    sessionId,
+    streaming,
+  });
   
   try {
-    logger.info('RAG query started', {
-      query: query.substring(0, 100),
-      topK,
-      similarityThreshold,
-      sessionId,
-    });
-    
-    // Step 1: Generate query embedding
-    const queryEmbedding = await generateEmbedding(query);
+    // Step 1: Generate query embedding (usar searchQuery expandida)
+    const queryEmbedding = await generateEmbedding(searchQuery);
     
     // Step 2: Search similar FAQs
     const similarFAQs = await searchSimilarFAQs(queryEmbedding, {
-      topK,
-      similarityThreshold,
+      topK: TOP_K_RESULTS,
+      similarityThreshold: SIMILARITY_THRESHOLD,
     });
     
     logger.info('Similar FAQs found', {
@@ -63,11 +63,11 @@ export async function processRAGQuery(query, options = {}) {
       topSimilarity: similarFAQs[0]?.similarity,
     });
     
-    // Step 3: Assemble context
-    const context = assembleContext(similarFAQs, query);
+    // Step 3: Assemble context (usar query original para el contexto)
+    const context = assembleContext(similarFAQs, userQuery);
     
-    // Step 4: Generate response with LLM
-    const response = await generateResponseWithContext(query, context, {
+    // Step 4: Generate response with LLM (usar query original)
+    const response = await generateResponseWithContext(userQuery, context, {
       streaming,
       similarFAQs,
     });
@@ -76,7 +76,7 @@ export async function processRAGQuery(query, options = {}) {
     
     // Step 5: Log analytics
     await logAnalytics({
-      query,
+      query: userQuery,
       matchedFAQs: similarFAQs.map(f => f.id),
       similarityScores: similarFAQs.map(f => f.similarity),
       responseTimeMs: duration,
@@ -160,17 +160,12 @@ export async function searchSimilarFAQs(queryEmbedding, options = {}) {
 function assembleContext(similarFAQs, userQuery) {
   if (!similarFAQs || similarFAQs.length === 0) {
     return `
-No se encontró información relevante en la base de conocimiento de la UNC para responder esta pregunta.
+Pregunta: ${userQuery}
 
-Pregunta del usuario: ${userQuery}
-
-Instrucciones:
-Responde honestamente que no tienes información sobre eso en tu base de conocimiento.
-Sugiere al usuario:
-1. Visitar el sitio web oficial: https://unc.edu.ve/
-2. Contactar a la UNC por redes sociales: Instagram, TikTok o Threads
-3. Visitar las instalaciones en Sector Altos de Pipe, km 11, Panamericana, estado Miranda
-Mantén un tono amigable y entusiasta sobre la UNC.
+INSTRUCCIONES:
+- MÁXIMO 15 PALABRAS
+- Di: "No tengo esa información. 📧 Visita https://unc.edu.ve/ o contáctanos por redes."
+- Formato: [Mensaje] [emoji] [Acción sugerida]
 `.trim();
   }
   
@@ -197,9 +192,10 @@ ${faqContext}
 Pregunta: ${userQuery}
 
 INSTRUCCIONES:
-- Usa la respuesta de las FAQs DIRECTAMENTE (no la expandas ni reformules)
-- Máximo 3 líneas
-- Termina con pregunta de seguimiento
+- MÁXIMO 20 PALABRAS (respuesta completa pero concisa)
+- Formato: [Dato completo] [emoji] [¿Pregunta de seguimiento?]
+- EJEMPLO: "Abren en **enero** y **julio** cada año. 📅 ¿Necesitas info sobre documentos?"
+- Incluye contexto necesario pero evita redundancias
 `.trim();
   
   // Ensure context doesn't exceed max length
@@ -243,31 +239,26 @@ async function generateResponseWithContext(query, context, options = {}) {
   // Determine if we have good context or not
   const hasGoodContext = similarFAQs.length > 0 && similarFAQs[0].similarity >= SIMILARITY_THRESHOLD;
   
-  const systemPrompt = `Eres un asistente de la UNC. RESPUESTAS ULTRA CORTAS.
+  const systemPrompt = `Eres un asistente UNC. RESPUESTAS CORTAS Y DIRECTAS (15-20 palabras máximo).
 
-REGLA CRÍTICA: COPIA la respuesta de la FAQ EXACTAMENTE como está. NO agregues saludos, NO expandas, NO reformules.
+FORMATO:
+[Dato principal con contexto mínimo] + [emoji] + [pregunta de seguimiento]
 
-FORMATO OBLIGATORIO:
-Copia TEXTUALMENTE la respuesta de la FAQ más relevante.
+EJEMPLOS CORRECTOS:
+"Abren en **enero** y **julio** cada año. 📅 ¿Necesitas info sobre documentos?"
+"Varía entre **30-50 cupos** por carrera según demanda. 🎯 ¿Te interesa alguna carrera?"
+"De **lunes a viernes 8am-4pm**. ⏰ ¿Quieres saber ubicación?"
 
-EJEMPLO CORRECTO:
-FAQ: "Varía entre **30-50 cupos** por carrera según demanda. Los cupos se asignan por mérito. 🎯 ¿Te interesa aplicar? Puedo contarte sobre becas."
-TU RESPUESTA: "Varía entre **30-50 cupos** por carrera según demanda. Los cupos se asignan por mérito. 🎯 ¿Te interesa aplicar? Puedo contarte sobre becas."
-
-EJEMPLO INCORRECTO (NO HAGAS ESTO):
-"¡Hola! En la Universidad Nacional de las Ciencias Dr. Humberto Fernández-Morán (UNC), la cantidad de cupos..."
-
-REGLAS ABSOLUTAS:
-- NO agregues introducciones como "¡Hola!", "En la UNC...", etc
-- NO expandas la información
-- NO menciones el nombre completo de la universidad
-- NO agregues información adicional
-- MÁXIMO 40 palabras
-- Copia EXACTAMENTE lo que dice la FAQ
+REGLAS:
+- Máximo 20 palabras
+- Incluye el dato completo pero sin expandir innecesariamente
+- Siempre termina con pregunta de seguimiento
+- Usa markdown bold para datos clave
+- Un emoji relevante
 
 ${hasGoodContext ? 
-  'Copia la respuesta de la FAQ más relevante SIN MODIFICARLA.' :
-  'No encontré información. Di: "No tengo esa información. Visita https://unc.edu.ve/ o contáctanos por redes sociales."'
+  'Resume la FAQ a lo mínimo esencial.' :
+  'Di: "No tengo info. 📧 Visita unc.edu.ve"'
 }`;
   
   const messages = [
@@ -286,7 +277,7 @@ ${hasGoodContext ?
       model: process.env.OPENAI_MODEL || 'openai/gpt-4o-mini',
       messages,
       temperature: 0.1, // Very low for deterministic, concise answers
-      max_tokens: 100, // LIMIT to force short responses
+      max_tokens: 60, // SHORT: max 20 words
       stream: streaming,
     });
     
@@ -301,8 +292,8 @@ ${hasGoodContext ?
       let answer = response.choices[0].message.content;
       const tokensUsed = response.usage?.total_tokens || 0;
       
-      // FORCE truncate to ~40 words (aprox 200 chars) if too long
-      const MAX_CHARS = 250;
+      // FORCE truncate to ~20 words (aprox 140 chars) if too long
+      const MAX_CHARS = 150;
       if (answer.length > MAX_CHARS) {
         answer = answer.substring(0, MAX_CHARS).trim();
         // Find last complete sentence
@@ -311,7 +302,7 @@ ${hasGoodContext ?
           answer.lastIndexOf('?'),
           answer.lastIndexOf('!')
         );
-        if (lastPeriod > 100) {
+        if (lastPeriod > 50) {
           answer = answer.substring(0, lastPeriod + 1);
         }
       }

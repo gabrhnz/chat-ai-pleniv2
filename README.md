@@ -1,6 +1,6 @@
-# 🤖 FAQ Bot con RAG - Universidad
+# 🤖 Chatbot Inteligente UNC - Sistema RAG
 
-Sistema inteligente de chatbot para responder preguntas frecuentes de comunidades universitarias usando **RAG (Retrieval-Augmented Generation)** con búsqueda semántica.
+Sistema de chatbot con **RAG (Retrieval-Augmented Generation)** y búsqueda semántica para la Universidad Nacional de las Ciencias (UNC). Responde preguntas de estudiantes con información verificada y actualizada.
 
 ## 🎯 ¿Qué hace?
 
@@ -312,6 +312,16 @@ Si necesitas ayuda:
 
 ---
 
-**Hecho con ❤️ para comunidades universitarias**
+## 👨‍💻 Desarrollado por
+
+**Gabriel Hernández**
+- 🌐 Website: [gabrhnz.dev](https://www.gabrhnz.dev/)
+- 💼 Portfolio & Contacto
+
+---
+
+**Hecho con ❤️ para la Universidad Nacional de las Ciencias (UNC)**
+
+Sistema desarrollado para mejorar la experiencia de estudiantes mediante IA conversacional.
 
 ¿Te fue útil? Dale una ⭐ al repo!

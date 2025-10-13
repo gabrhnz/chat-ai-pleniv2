@@ -1,0 +1,52 @@
+[
+  {
+    "question": "¿Cuándo comienza el semestre?",
+    "answer": "El semestre comienza el **13 de octubre**. 📅 ¿Tienes todo listo para ese día?",
+    "category": "horarios",
+    "keywords": [
+      "semestre",
+      "octubre"
+    ],
+    "confidence": "high"
+  },
+  {
+    "question": "¿Qué ventajas tienen los recién graduados?",
+    "answer": "Tienen prioridad para residencias y asignaciones. 👩‍🎓 ¿Estás preparado para aplicar?",
+    "category": "requisitos",
+    "keywords": [
+      "ventajas",
+      "graduados"
+    ],
+    "confidence": "high"
+  },
+  {
+    "question": "¿Qué materias se cursan en el propedéutico?",
+    "answer": "Se cursan **4 materias** incluyendo matemáticas y herramientas tecnológicas. 📚 ¿Te gustaría más detalles?",
+    "category": "carreras",
+    "keywords": [
+      "propedéutico",
+      "materias"
+    ],
+    "confidence": "high"
+  },
+  {
+    "question": "¿Cómo se gestionan las residencias?",
+    "answer": "La universidad está evaluando casos para **asignaciones de residencias**. 🏠 ¿Te gustaría saber más?",
+    "category": "vida-universitaria",
+    "keywords": [
+      "residencias",
+      "asignaciones"
+    ],
+    "confidence": "high"
+  },
+  {
+    "question": "¿Qué pasa si no tengo residencia?",
+    "answer": "La universidad hará seguimiento a tu caso si no tienes residencia. 🔍 ¿Necesitas ayuda con eso?",
+    "category": "vida-universitaria",
+    "keywords": [
+      "residencia",
+      "seguimiento"
+    ],
+    "confidence": "high"
+  }
+]

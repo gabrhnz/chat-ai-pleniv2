@@ -6,9 +6,16 @@
  */
 
 import { supabase, supabaseAdmin } from '../config/supabase.js';
-import { generateEmbedding, generateEmbeddingsBatch } from '../services/embeddings.service.js';
+// Import both embedding services
+import * as embeddingsLocal from '../services/embeddings.service.js';
+import * as embeddingsCloud from '../services/embeddings.service.cloud.js';
+import config from '../config/environment.js';
 import logger from '../utils/logger.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
+
+// Select embedding service based on environment
+const embeddingsService = config.server.isProduction ? embeddingsCloud : embeddingsLocal;
+const { generateEmbedding, generateEmbeddingsBatch } = embeddingsService;
 
 /**
  * GET /api/admin/faqs

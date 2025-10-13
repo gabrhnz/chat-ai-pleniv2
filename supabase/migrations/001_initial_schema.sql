@@ -81,7 +81,7 @@ CREATE TABLE IF NOT EXISTS document_chunks (
   chunk_text TEXT NOT NULL,
   chunk_index INTEGER NOT NULL,
   token_count INTEGER,
-  embedding vector(1536),
+  embedding vector(384),
   metadata JSONB DEFAULT '{}',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -160,7 +160,7 @@ CREATE TRIGGER update_documents_updated_at
 -- Description: Semantic search function for FAQs using cosine similarity
 -- ============================================
 CREATE OR REPLACE FUNCTION match_faqs(
-  query_embedding vector(1536),
+  query_embedding vector(384),
   match_threshold float DEFAULT 0.7,
   match_count int DEFAULT 5
 )
@@ -199,7 +199,7 @@ $$;
 -- Description: Semantic search for document chunks
 -- ============================================
 CREATE OR REPLACE FUNCTION match_document_chunks(
-  query_embedding vector(1536),
+  query_embedding vector(384),
   match_threshold float DEFAULT 0.7,
   match_count int DEFAULT 10
 )
@@ -238,7 +238,7 @@ $$;
 -- ============================================
 CREATE OR REPLACE FUNCTION hybrid_search(
   query_text text,
-  query_embedding vector(1536),
+  query_embedding vector(384),
   match_threshold float DEFAULT 0.7,
   match_count int DEFAULT 5
 )

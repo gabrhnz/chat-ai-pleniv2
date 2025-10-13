@@ -214,8 +214,8 @@ try {
     process.env.SUPABASE_SERVICE_ROLE_KEY
   );
   
-  // Test match_faqs function with a dummy embedding
-  const dummyEmbedding = new Array(1536).fill(0);
+  // Test match_faqs function with a dummy embedding (384 dimensions for sentence-transformers)
+  const dummyEmbedding = new Array(384).fill(0);
   const { data, error } = await supabase.rpc('match_faqs', {
     query_embedding: dummyEmbedding,
     match_threshold: 0.5,
