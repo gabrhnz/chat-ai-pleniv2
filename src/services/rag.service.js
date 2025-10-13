@@ -13,6 +13,7 @@ import { supabase } from '../config/supabase.js';
 import * as embeddingsLocal from './embeddings.service.js';
 import * as embeddingsCloud from './embeddings.service.cloud.js';
 import { expandQuerySimple } from './query-expansion.service.js';
+import { expandQueryWithContext, saveMessage } from './conversation-memory.service.js';
 import OpenAI from 'openai';
 import config from '../config/environment.js';
 import logger from '../utils/logger.js';
@@ -37,12 +38,16 @@ export async function processRAGQuery(userQuery, options = {}) {
   const startTime = Date.now();
   const { streaming = false, sessionId = null } = options;
   
-  // Expandir consulta ambigua
-  const queryExpansion = expandQuerySimple(userQuery);
+  // 1. Expandir con contexto de conversación (memoria)
+  const contextualQuery = expandQueryWithContext(userQuery, sessionId);
+  
+  // 2. Expandir consulta ambigua (heurísticas)
+  const queryExpansion = expandQuerySimple(contextualQuery);
   const searchQuery = queryExpansion.expanded;
   
   logger.info('Processing RAG query', {
     originalQuery: userQuery.substring(0, 100),
+    contextualQuery: contextualQuery !== userQuery ? contextualQuery : 'no context',
     expandedQuery: queryExpansion.wasExpanded ? searchQuery : 'not expanded',
     sessionId,
     streaming,
@@ -88,6 +93,15 @@ export async function processRAGQuery(userQuery, options = {}) {
       faqsUsed: similarFAQs.length,
       hasAnswer: !!response.answer,
     });
+    
+    // Guardar en memoria de conversación
+    if (sessionId) {
+      saveMessage(sessionId, 'user', userQuery);
+      saveMessage(sessionId, 'assistant', response.answer, {
+        category: similarFAQs[0]?.category,
+        sources: similarFAQs.map(f => f.id),
+      });
+    }
     
     return {
       answer: response.answer,

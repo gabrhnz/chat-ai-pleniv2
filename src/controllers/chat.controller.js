@@ -15,12 +15,17 @@ import { asyncHandler } from '../middleware/errorHandler.js';
  * Procesa mensajes del usuario y retorna respuestas del chatbot
  */
 export const chatHandler = asyncHandler(async (req, res) => {
-  const { message, sessionId, userId, streaming = false } = req.body;
+  let { message, sessionId, userId, streaming = false } = req.body;
+  
+  // Generar sessionId si no existe (para memoria de conversación)
+  if (!sessionId) {
+    sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
   
   // Log de la request (sin datos sensibles)
   logger.info('RAG chat request received', {
     messageLength: message.length,
-    sessionId: sessionId || 'none',
+    sessionId,
     userId: userId || 'anonymous',
     streaming,
     ip: req.ip,
@@ -67,6 +72,7 @@ export const chatHandler = asyncHandler(async (req, res) => {
     // Regular JSON response (non-streaming)
     const responseData = {
       reply: ragResponse.answer,
+      sessionId, // Retornar sessionId para que el frontend lo use
       sources: ragResponse.sources.map(faq => ({
         id: faq.id,
         question: faq.question,
@@ -80,6 +86,7 @@ export const chatHandler = asyncHandler(async (req, res) => {
     };
     
     logger.info('RAG chat response sent', {
+      sessionId,
       faqsUsed: ragResponse.sources.length,
       topSimilarity: ragResponse.metadata.topSimilarity,
       duration: ragResponse.metadata.duration,
