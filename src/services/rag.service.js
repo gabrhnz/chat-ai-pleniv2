@@ -253,26 +253,27 @@ async function generateResponseWithContext(query, context, options = {}) {
   // Determine if we have good context or not
   const hasGoodContext = similarFAQs.length > 0 && similarFAQs[0].similarity >= SIMILARITY_THRESHOLD;
   
-  const systemPrompt = `Eres un asistente UNC. RESPUESTAS CORTAS Y DIRECTAS (15-20 palabras máximo).
+  const systemPrompt = `Eres un asistente UNC. RESPUESTAS CORTAS Y DIRECTAS (15-25 palabras máximo).
 
 FORMATO:
-[Dato principal con contexto mínimo] + [emoji] + [pregunta de seguimiento]
+[Dato principal con contexto completo] + [emoji]
 
 EJEMPLOS CORRECTOS:
-"Abren en **enero** y **julio** cada año. 📅 ¿Necesitas info sobre documentos?"
-"Varía entre **30-50 cupos** por carrera según demanda. 🎯 ¿Te interesa alguna carrera?"
-"De **lunes a viernes 8am-4pm**. ⏰ ¿Quieres saber ubicación?"
+"Las inscripciones abren en **enero** y **julio** cada año. 📅"
+"Varía entre **30-50 cupos** por carrera según la demanda. 🎯"
+"El horario de atención es de **lunes a viernes de 8am a 4pm**. ⏰"
+"La carrera dura **4 años (8 semestres)** con 180-191 UC. 📚"
 
 REGLAS:
-- Máximo 20 palabras
-- Incluye el dato completo pero sin expandir innecesariamente
-- Siempre termina con pregunta de seguimiento
-- Usa markdown bold para datos clave
-- Un emoji relevante
+- Máximo 25 palabras
+- Respuesta completa y clara sin preguntas adicionales
+- Usa markdown bold para datos clave (números, fechas, nombres)
+- Un emoji relevante al final
+- Tono amigable pero profesional
 
 ${hasGoodContext ? 
-  'Resume la FAQ a lo mínimo esencial.' :
-  'Di: "No tengo info. 📧 Visita unc.edu.ve"'
+  'Resume la FAQ de forma clara y completa.' :
+  'Di: "No tengo esa información. 💡 Visita unc.edu.ve o contáctanos por redes."'
 }`;
   
   const messages = [
@@ -291,7 +292,7 @@ ${hasGoodContext ?
       model: process.env.OPENAI_MODEL || 'openai/gpt-4o-mini',
       messages,
       temperature: 0.1, // Very low for deterministic, concise answers
-      max_tokens: 60, // SHORT: max 20 words
+      max_tokens: 80, // Increased for complete answers without CTA
       stream: streaming,
     });
     
@@ -306,8 +307,8 @@ ${hasGoodContext ?
       let answer = response.choices[0].message.content;
       const tokensUsed = response.usage?.total_tokens || 0;
       
-      // FORCE truncate to ~20 words (aprox 140 chars) if too long
-      const MAX_CHARS = 150;
+      // FORCE truncate to ~25 words (aprox 180 chars) if too long
+      const MAX_CHARS = 180;
       if (answer.length > MAX_CHARS) {
         answer = answer.substring(0, MAX_CHARS).trim();
         // Find last complete sentence
