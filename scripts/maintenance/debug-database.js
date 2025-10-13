@@ -12,9 +12,9 @@
  */
 
 import dotenv from 'dotenv';
-import { supabase, supabaseAdmin } from '../src/config/supabase.js';
-import { generateEmbedding } from '../src/services/embeddings.service.js';
-import logger from '../src/utils/logger.js';
+import { supabase, supabaseAdmin } from '../../src/config/supabase.js';
+import { generateEmbedding } from '../../src/services/embeddings.service.js';
+import logger from '../../src/utils/logger.js';
 
 // Load environment variables
 dotenv.config();
