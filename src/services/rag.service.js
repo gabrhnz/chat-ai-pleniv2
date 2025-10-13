@@ -264,15 +264,17 @@ EJEMPLOS CORRECTOS:
 "El horario de atención es de **lunes a viernes de 8am a 4pm**. ⏰"
 "La carrera dura **4 años (8 semestres)** con 180-191 UC. 📚"
 
-REGLAS:
+REGLAS ESTRICTAS:
 - Máximo 25 palabras
-- Respuesta completa y clara sin preguntas adicionales
-- Usa markdown bold para datos clave (números, fechas, nombres)
+- NO hagas preguntas de seguimiento
+- NO agregues "¿Te interesa...?" o similares
+- Solo da la información solicitada
+- Usa markdown bold para datos clave
 - Un emoji relevante al final
-- Tono amigable pero profesional
+- Termina con punto, NO con pregunta
 
 ${hasGoodContext ? 
-  'Resume la FAQ de forma clara y completa.' :
+  'Resume la FAQ de forma clara y completa. NO AGREGUES PREGUNTAS.' :
   'Di: "No tengo esa información. 💡 Visita unc.edu.ve o contáctanos por redes."'
 }`;
   
