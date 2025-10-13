@@ -5,16 +5,16 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
-import * as embeddingsLocal from '../src/services/embeddings.service.js';
-import * as embeddingsCloud from '../src/services/embeddings.service.cloud.js';
-import config from '../src/config/environment.js';
+import * as embeddingsLocal from '../../src/services/embeddings.service.js';
+import * as embeddingsCloud from '../../src/services/embeddings.service.cloud.js';
+import config from '../../src/config/environment.js';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const rootDir = path.join(__dirname, '..');
+const rootDir = path.join(__dirname, '../..');
 
 dotenv.config({ path: path.join(rootDir, '.env') });
 
