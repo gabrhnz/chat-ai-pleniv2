@@ -141,9 +141,68 @@ RESPONDE SOLO CON LA CONSULTA EXPANDIDA, SIN EXPLICACIONES.`;
  * Más rápido pero menos preciso
  * Incluye patrones venezolanos coloquiales
  */
+
+/**
+ * Expande abreviaturas académicas comunes
+ */
+function expandAcademicAbbreviations(query) {
+  // Mapa de abreviaturas comunes en español académico
+  const abbreviations = {
+    // Ingenierías
+    'ing': 'ingeniería',
+    'ing.': 'ingeniería',
+    'ingenieria': 'ingeniería',
+    'ingeniería': 'ingeniería',
+
+    // Licenciaturas
+    'lic': 'licenciatura',
+    'lic.': 'licenciatura',
+    'licenciatura': 'licenciatura',
+
+    // Carreras específicas comunes
+    'ia': 'inteligencia artificial',
+    'ai': 'inteligencia artificial',
+    'ciber': 'ciberseguridad',
+    'ciberseguridad': 'ciberseguridad',
+    'robot': 'robótica',
+    'robotica': 'robótica',
+    'electro': 'electromedicina',
+    'electromedicina': 'electromedicina',
+    'petro': 'petroquímica',
+    'petroquimica': 'petroquímica',
+    'bio': 'biotecnología',
+    'biotecnologia': 'biotecnología',
+    'nano': 'nanotecnología',
+    'nanotecnologia': 'nanotecnología',
+    'oceano': 'oceanología',
+    'oceanologia': 'oceanología',
+    'fis': 'física',
+    'fisica': 'física',
+    'mate': 'matemáticas',
+    'matematicas': 'matemáticas',
+    'quim': 'química',
+    'quimica': 'química',
+    'filo': 'filosofía',
+    'filosofia': 'filosofía',
+  };
+
+  let expanded = query;
+
+  // Reemplazar abreviaturas
+  for (const [abbr, full] of Object.entries(abbreviations)) {
+    const regex = new RegExp(`\\b${abbr}\\b`, 'gi');
+    expanded = expanded.replace(regex, full);
+  }
+
+  return expanded;
+}
+
 export function expandQuerySimple(query) {
   const normalized = query.toLowerCase().trim();
-  
+
+  // PRIMERO: Expandir abreviaturas académicas comunes
+  let expandedQuery = expandAcademicAbbreviations(normalized);
+
   // Patrones comunes y sus expansiones (incluye estilo venezolano)
   const expansions = [
     // Patrones estándar
@@ -152,10 +211,10 @@ export function expandQuerySimple(query) {
     { pattern: /^(dime|muestra|lista)/i, expansion: 'dime las carreras' },
     { pattern: /^(quiero|quisiera)\s*(saber|conocer|ver)/i, expansion: 'quiero conocer las carreras' },
     { pattern: /^(opciones|alternativas)/i, expansion: 'opciones de carreras' },
-    
+
     // Patrones venezolanos coloquiales
     { pattern: /^(hola|buenas|que tal|hey)$/i, expansion: 'hola' },
-    { pattern: /^en\s*que\s*se\s*basa/i, expansion: query }, // Mantener tal cual, es específica
+    { pattern: /^en\s*que\s*se\s*basa/i, expansion: expandedQuery }, // Mantener tal cual, es específica
     { pattern: /^(cuales|que)\s*carreras/i, expansion: 'cuáles carreras hay' },
     { pattern: /^como\s*(me\s*)?inscribo/i, expansion: 'cómo me inscribo en la UNC' },
     { pattern: /^cuando\s*abren/i, expansion: 'cuándo abren inscripciones' },
@@ -171,10 +230,29 @@ export function expandQuerySimple(query) {
     { pattern: /^vale\s*la\s*pena/i, expansion: 'vale la pena estudiar en la UNC' },
     { pattern: /^(cual|cuál)\s*es\s*mejor/i, expansion: 'cuál carrera es mejor' },
     { pattern: /^que\s*me\s*recomiendas/i, expansion: 'qué carrera me recomiendas' },
+
+    // NUEVO: Patrones con abreviaturas expandidas
+    { pattern: /ing\s*en\s*ia/i, expansion: 'ingeniería en inteligencia artificial' },
+    { pattern: /ing\s*ia/i, expansion: 'ingeniería en inteligencia artificial' },
+    { pattern: /lic\s*en\s*fis/i, expansion: 'licenciatura en física' },
+    { pattern: /lic\s*fis/i, expansion: 'licenciatura en física' },
+    { pattern: /ing\s*ciber/i, expansion: 'ingeniería en ciberseguridad' },
+    { pattern: /ing\s*robot/i, expansion: 'ingeniería en robótica' },
+    { pattern: /ing\s*electro/i, expansion: 'ingeniería en electromedicina' },
+    { pattern: /ing\s*petro/i, expansion: 'ingeniería en petroquímica' },
+    { pattern: /biotecnolog/i, expansion: 'biotecnología' },
+    { pattern: /nano\s*tec/i, expansion: 'nanotecnología' },
+    { pattern: /oceanolog/i, expansion: 'oceanología' },
+    { pattern: /ciencia\s*de\s*datos/i, expansion: 'ciencia de datos' },
+    { pattern: /ciencia\s*molecular/i, expansion: 'ciencia molecular' },
+    { pattern: /biolog/i, expansion: 'biología y química computacional' },
   ];
   
+  // Usar la query expandida para el resto de las expansiones
+  const finalNormalized = expandedQuery;
+
   for (const { pattern, expansion } of expansions) {
-    if (pattern.test(normalized)) {
+    if (pattern.test(finalNormalized)) {
       logger.info('Query expanded (simple)', {
         original: query,
         expanded: expansion,
@@ -186,7 +264,20 @@ export function expandQuerySimple(query) {
       };
     }
   }
-  
+
+  // Si no hay expansión específica, devolver la query con abreviaturas expandidas
+  if (expandedQuery !== normalized) {
+    logger.info('Query expanded (abbreviations only)', {
+      original: query,
+      expanded: expandedQuery,
+    });
+    return {
+      expanded: expandedQuery,
+      wasExpanded: true,
+      original: query,
+    };
+  }
+
   return {
     expanded: query,
     wasExpanded: false,
