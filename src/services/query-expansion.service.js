@@ -139,17 +139,38 @@ RESPONDE SOLO CON LA CONSULTA EXPANDIDA, SIN EXPLICACIONES.`;
 /**
  * Expande consulta con heurísticas simples (sin LLM)
  * Más rápido pero menos preciso
+ * Incluye patrones venezolanos coloquiales
  */
 export function expandQuerySimple(query) {
   const normalized = query.toLowerCase().trim();
   
-  // Patrones comunes y sus expansiones
+  // Patrones comunes y sus expansiones (incluye estilo venezolano)
   const expansions = [
+    // Patrones estándar
     { pattern: /^(cuáles?|cuales?)\s*(hay|son|tiene)/i, expansion: 'cuáles carreras hay' },
     { pattern: /^(qué|que)\s*(hay|son|tiene)/i, expansion: 'qué carreras hay' },
     { pattern: /^(dime|muestra|lista)/i, expansion: 'dime las carreras' },
     { pattern: /^(quiero|quisiera)\s*(saber|conocer|ver)/i, expansion: 'quiero conocer las carreras' },
     { pattern: /^(opciones|alternativas)/i, expansion: 'opciones de carreras' },
+    
+    // Patrones venezolanos coloquiales
+    { pattern: /^(hola|buenas|que tal|hey)$/i, expansion: 'hola' },
+    { pattern: /^en\s*que\s*se\s*basa/i, expansion: query }, // Mantener tal cual, es específica
+    { pattern: /^(cuales|que)\s*carreras/i, expansion: 'cuáles carreras hay' },
+    { pattern: /^como\s*(me\s*)?inscribo/i, expansion: 'cómo me inscribo en la UNC' },
+    { pattern: /^cuando\s*abren/i, expansion: 'cuándo abren inscripciones' },
+    { pattern: /^(cuanto|cuánto)\s*cuesta/i, expansion: 'cuánto cuesta estudiar en la UNC' },
+    { pattern: /^es\s*gratis/i, expansion: 'es gratis la UNC' },
+    { pattern: /^dan\s*becas/i, expansion: 'dan becas en la UNC' },
+    { pattern: /^(donde|dónde)\s*queda/i, expansion: 'dónde queda la UNC' },
+    { pattern: /^como\s*llego/i, expansion: 'cómo llego a la UNC' },
+    { pattern: /^que\s*horario/i, expansion: 'qué horarios tienen las clases' },
+    { pattern: /^(cuanto|cuánto)\s*dura/i, expansion: 'cuánto dura la carrera' },
+    { pattern: /^hay\s*trabajo/i, expansion: 'hay trabajo después de graduarse' },
+    { pattern: /^pagan\s*bien/i, expansion: 'pagan bien las carreras' },
+    { pattern: /^vale\s*la\s*pena/i, expansion: 'vale la pena estudiar en la UNC' },
+    { pattern: /^(cual|cuál)\s*es\s*mejor/i, expansion: 'cuál carrera es mejor' },
+    { pattern: /^que\s*me\s*recomiendas/i, expansion: 'qué carrera me recomiendas' },
   ];
   
   for (const { pattern, expansion } of expansions) {

@@ -98,8 +98,9 @@ export function expandQueryWithContext(query, sessionId) {
   const lastMessages = conversation.getRecentMessages(3);
   
   // Si la query es muy corta y ambigua, agregar contexto
-  const isAmbiguous = query.length < 20 && 
-    (query.match(/^(si|sí|la de|el de|esa|ese|esta|este|dame|dime|quiero|cuál)/i));
+  const isAmbiguous = query.length < 50 && 
+    (query.match(/^(si|sí|la de|el de|esa|ese|esta|este|dame|dime|quiero|cuál)/i) ||
+     query.match(/(salida|campo|trabaja|hace|oportunidad|empleo)/i) && !query.match(/(ingeniería|licenciatura|carrera de|física|matemática|biotecnología|nanotecnología|ciberseguridad|robótica|electromedicina|petroquímica|biomateriales|inteligencia artificial|ciencia de datos|oceanología|filosofía|ciencia molecular|biología computacional|química computacional)/i));
   
   if (!isAmbiguous) {
     return query;
@@ -113,7 +114,48 @@ export function expandQueryWithContext(query, sessionId) {
     
     if (msg.role === 'assistant' && msg.metadata.category) {
       // Si el bot habló de carreras, agregar ese contexto
-      if (msg.metadata.category === 'carreras' || msg.content.includes('carrera')) {
+      if (msg.metadata.category === 'carreras' || isTalkingAboutCarreras(msg.content)) {
+        
+        // Detectar preguntas sobre áreas después de hablar de carreras
+        if (query.match(/^(cuales?|que|cuáles?)\s*(areas?|áreas?)/i)) {
+          contextualQuery = '¿Cuáles áreas de estudio tiene la UNC?';
+          
+          logger.info('Query expandida con contexto de áreas', {
+            original: query,
+            expanded: contextualQuery,
+            sessionId,
+          });
+          
+          break;
+        }
+        
+        // Detectar preguntas sobre salidas laborales/campo laboral
+        if (query.match(/(salida|campo|trabaja|hace|oportunidad|empleo|donde|dónde)/i)) {
+          const carreras = extractCarrerasFromText(msg.content);
+          if (carreras.length > 0) {
+            const carrera = carreras[0];
+            
+            // Determinar tipo de pregunta
+            if (query.match(/(salida|oportunidad|empleo)/i)) {
+              contextualQuery = `¿Cuáles son las salidas laborales de ${carrera}?`;
+            } else if (query.match(/(donde|dónde|trabaja)/i)) {
+              contextualQuery = `¿Dónde puede trabajar un profesional en ${carrera}?`;
+            } else if (query.match(/hace/i)) {
+              contextualQuery = `¿Qué hace un profesional en ${carrera}?`;
+            } else if (query.match(/campo/i)) {
+              contextualQuery = `¿Cuál es el campo laboral de ${carrera}?`;
+            }
+            
+            logger.info('Query expandida con contexto de carrera (salida laboral)', {
+              original: query,
+              expanded: contextualQuery,
+              carrera,
+              sessionId,
+            });
+            
+            break;
+          }
+        }
         
         // Detectar referencia a carrera específica
         const carreraMatch = query.match(/la de (\w+)|el de (\w+)|de (\w+)/i);
@@ -206,6 +248,19 @@ function extractCarrerasFromText(text) {
   }
   
   return found;
+}
+
+/**
+ * Detectar si el mensaje habla de carreras en general
+ */
+function isTalkingAboutCarreras(text) {
+  const lowerText = text.toLowerCase();
+  const carrerasKeywords = [
+    'carrera', 'ingenier', 'licenciatura', 'programa', 
+    'estudiar', 'ofrece', 'imparte', 'dicta'
+  ];
+  
+  return carrerasKeywords.some(kw => lowerText.includes(kw));
 }
 
 /**

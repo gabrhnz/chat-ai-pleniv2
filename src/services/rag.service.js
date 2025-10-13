@@ -14,6 +14,8 @@ import * as embeddingsLocal from './embeddings.service.js';
 import * as embeddingsCloud from './embeddings.service.cloud.js';
 import { expandQuerySimple } from './query-expansion.service.js';
 import { expandQueryWithContext, saveMessage } from './conversation-memory.service.js';
+import { classifyQuery, getSearchParams, logQueryClassification } from './query-classifier.service.js';
+import semanticCache from './semantic-cache.service.js';
 import OpenAI from 'openai';
 import config from '../config/environment.js';
 import logger from '../utils/logger.js';
@@ -38,6 +40,11 @@ export async function processRAGQuery(userQuery, options = {}) {
   const startTime = Date.now();
   const { streaming = false, sessionId = null } = options;
   
+  // NUEVO: Clasificar query para optimizar búsqueda
+  const queryType = classifyQuery(userQuery);
+  const searchParams = getSearchParams(queryType);
+  logQueryClassification(userQuery, queryType);
+  
   // 1. Expandir con contexto de conversación (memoria)
   const contextualQuery = expandQueryWithContext(userQuery, sessionId);
   
@@ -49,26 +56,48 @@ export async function processRAGQuery(userQuery, options = {}) {
     originalQuery: userQuery.substring(0, 100),
     contextualQuery: contextualQuery !== userQuery ? contextualQuery : 'no context',
     expandedQuery: queryExpansion.wasExpanded ? searchQuery : 'not expanded',
+    queryType,
+    searchParams: searchParams.description,
     sessionId,
     streaming,
   });
   
   try {
-    // Step 1: Generate query embedding (usar searchQuery expandida)
+    // NUEVO: Generar embedding para la búsqueda
     const queryEmbedding = await generateEmbedding(searchQuery);
     
-    // Step 2: Search similar FAQs
+    // NUEVO: Verificar cache semántico antes de búsqueda costosa
+    const cachedResponse = await semanticCache.getCachedResponse(userQuery, queryEmbedding);
+    if (cachedResponse) {
+      logger.info('Returning cached response', {
+        cacheKey: cachedResponse.cacheKey,
+        similarity: cachedResponse.similarity
+      });
+      
+      return {
+        ...cachedResponse,
+        metadata: {
+          ...cachedResponse.metadata,
+          duration: Date.now() - startTime,
+          fromCache: true,
+          cacheSimilarity: cachedResponse.similarity
+        }
+      };
+    }
+    
+    // Step 2: Search similar FAQs con parámetros optimizados por tipo de query
     const similarFAQs = await searchSimilarFAQs(queryEmbedding, {
-      topK: TOP_K_RESULTS,
-      similarityThreshold: SIMILARITY_THRESHOLD,
+      topK: searchParams.topK,
+      similarityThreshold: searchParams.threshold,
     });
     
     logger.info('Similar FAQs found', {
       count: similarFAQs.length,
       topSimilarity: similarFAQs[0]?.similarity,
+      queryType,
+      searchParams: `${searchParams.topK}k-${searchParams.threshold}t`
     });
     
-    // Step 3: Assemble context (usar query original para el contexto)
     const context = assembleContext(similarFAQs, userQuery);
     
     // Step 4: Generate response with LLM (usar query original)
@@ -79,19 +108,29 @@ export async function processRAGQuery(userQuery, options = {}) {
     
     const duration = Date.now() - startTime;
     
-    // Step 5: Log analytics
+    // NUEVO: Cachear respuesta exitosa
+    if (response.answer && similarFAQs.length > 0) {
+      await semanticCache.cacheResponse(userQuery, queryEmbedding, response);
+    }
+    
+    // Step 5: Log analytics con nueva metadata
     await logAnalytics({
       query: userQuery,
       matchedFAQs: similarFAQs.map(f => f.id),
       similarityScores: similarFAQs.map(f => f.similarity),
       responseTimeMs: duration,
       sessionId,
+      queryType,
+      searchParams: searchParams,
+      fromCache: false
     });
     
     logger.info('RAG query completed', {
       duration: `${duration}ms`,
       faqsUsed: similarFAQs.length,
       hasAnswer: !!response.answer,
+      queryType,
+      cached: false
     });
     
     // Guardar en memoria de conversación
@@ -112,6 +151,9 @@ export async function processRAGQuery(userQuery, options = {}) {
         topSimilarity: similarFAQs[0]?.similarity || 0,
         model: response.model,
         tokensUsed: response.tokensUsed,
+        queryType,
+        searchParams,
+        fromCache: false
       },
       streaming: response.stream || null,
     };
@@ -119,7 +161,8 @@ export async function processRAGQuery(userQuery, options = {}) {
   } catch (error) {
     logger.error('RAG query failed', {
       error: error.message,
-      query: query.substring(0, 100),
+      query: userQuery.substring(0, 100),
+      queryType
     });
     throw error;
   }
@@ -206,10 +249,12 @@ ${faqContext}
 Pregunta: ${userQuery}
 
 INSTRUCCIONES:
-- MÁXIMO 20 PALABRAS (respuesta completa pero concisa)
-- Formato: [Dato completo] [emoji] [¿Pregunta de seguimiento?]
-- EJEMPLO: "Abren en **enero** y **julio** cada año. 📅 ¿Necesitas info sobre documentos?"
+- MÁXIMO 100 PALABRAS (respuesta completa y útil)
+- Formato: [Dato principal completo con contexto necesario] + [emoji]
+- EJEMPLO: "Las inscripciones abren en enero y julio cada año. Los requisitos incluyen cédula de identidad, notas certificadas de bachillerato y certificado médico. 📅"
 - Incluye contexto necesario pero evita redundancias
+- Respuestas completas pero concisas
+- Para listas completas, incluye TODOS los elementos
 `.trim();
   
   // Ensure context doesn't exceed max length
@@ -253,19 +298,19 @@ async function generateResponseWithContext(query, context, options = {}) {
   // Determine if we have good context or not
   const hasGoodContext = similarFAQs.length > 0 && similarFAQs[0].similarity >= SIMILARITY_THRESHOLD;
   
-  const systemPrompt = `Eres un asistente UNC. RESPUESTAS CORTAS Y DIRECTAS (15-25 palabras máximo).
+  const systemPrompt = `Eres un asistente UNC. RESPUESTAS COMPLETAS Y ÚTILES (máximo 100 palabras).
 
 FORMATO:
-[Dato principal con contexto completo] + [emoji]
+[Dato principal completo con contexto necesario] + [emoji]
 
 EJEMPLOS CORRECTOS:
-"Las inscripciones abren en **enero** y **julio** cada año. 📅"
-"Varía entre **30-50 cupos** por carrera según la demanda. 🎯"
-"El horario de atención es de **lunes a viernes de 8am a 4pm**. ⏰"
-"La carrera dura **4 años (8 semestres)** con 180-191 UC. 📚"
+"Las inscripciones abren en enero y julio cada año. Los requisitos incluyen cédula de identidad, notas certificadas de bachillerato y certificado médico. 📅"
+"La carrera dura 4 años (8 semestres) con 180-191 UC. Incluye prácticas profesionales, laboratorios especializados y trabajo de grado final. 📚"
+"El horario de atención es de lunes a viernes de 7am a 4pm. Puedes contactarnos por teléfono, email o redes sociales. ⏰"
 
 REGLAS ESTRICTAS:
-- Máximo 25 palabras
+- Máximo 100 palabras
+- Respuestas completas pero concisas
 - NO hagas preguntas de seguimiento
 - NO agregues "¿Te interesa...?" o similares
 - Solo da la información solicitada
@@ -273,11 +318,11 @@ REGLAS ESTRICTAS:
 - Un emoji relevante al final
 - Termina con punto, NO con pregunta
 
-${hasGoodContext ? 
-  'Resume la FAQ de forma clara y completa. NO AGREGUES PREGUNTAS.' :
+${hasGoodContext ?
+  'Resume la FAQ de forma completa y clara. Incluye todos los detalles relevantes y listas completas.' :
   'Di: "No tengo esa información. 💡 Visita unc.edu.ve o contáctanos por redes."'
 }`;
-  
+
   const messages = [
     {
       role: 'system',
@@ -294,7 +339,7 @@ ${hasGoodContext ?
       model: process.env.OPENAI_MODEL || 'openai/gpt-4o-mini',
       messages,
       temperature: 0.1, // Very low for deterministic, concise answers
-      max_tokens: 80, // Increased for complete answers without CTA
+      max_tokens: 250, // Increased for complete answers with full lists
       stream: streaming,
     });
     
@@ -309,8 +354,8 @@ ${hasGoodContext ?
       let answer = response.choices[0].message.content;
       const tokensUsed = response.usage?.total_tokens || 0;
       
-      // FORCE truncate to ~25 words (aprox 180 chars) if too long
-      const MAX_CHARS = 180;
+      // FORCE truncate to ~100 words (aprox 500 chars) if too long
+      const MAX_CHARS = 500;
       if (answer.length > MAX_CHARS) {
         answer = answer.substring(0, MAX_CHARS).trim();
         // Find last complete sentence
