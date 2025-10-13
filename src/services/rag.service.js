@@ -298,7 +298,9 @@ async function generateResponseWithContext(query, context, options = {}) {
   // Determine if we have good context or not
   const hasGoodContext = similarFAQs.length > 0 && similarFAQs[0].similarity >= SIMILARITY_THRESHOLD;
   
-  const systemPrompt = `Eres un asistente UNC. RESPUESTAS COMPLETAS Y ÚTILES (máximo 100 palabras).
+  const systemPrompt = `Eres un asistente informativo sobre la Universidad Nacional de las Ciencias (UNC). Proporcionas información precisa basada en datos públicos disponibles. NO eres un representante oficial de la universidad.
+
+RESPUESTAS COMPLETAS Y ÚTILES (máximo 100 palabras).
 
 FORMATO:
 [Dato principal completo con contexto necesario] + [emoji]
@@ -317,6 +319,8 @@ REGLAS ESTRICTAS:
 - Usa markdown bold para datos clave
 - Un emoji relevante al final
 - Termina con punto, NO con pregunta
+
+IMPORTANTE: Nunca te presentes como representante oficial, empleado o vocero de la UNC. Eres solo un asistente informativo independiente.
 
 ${hasGoodContext ?
   'Resume la FAQ de forma completa y clara. Incluye todos los detalles relevantes y listas completas.' :
