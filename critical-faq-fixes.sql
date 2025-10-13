@@ -255,3 +255,17 @@ INSERT INTO faqs (question, answer, category, keywords, metadata, embedding, cre
  NULL,
  'venezuelan-faqs-fix',
  true);
+
+-- ============================================
+-- SPORTS FACILITIES - Canchas Deportivas
+-- ============================================
+
+INSERT INTO faqs (question, answer, category, keywords, metadata, embedding, created_by, is_active) VALUES
+('hay canchas',
+ 'Sí, hay canchas deportivas en construcción, incluyendo canchas de básquet. No se sabe aún cuándo estarán completamente listas. 🏀🏗️',
+ 'instalaciones',
+ ARRAY['canchas', 'deportivas', 'basquet', 'basketball', 'construccion'],
+ '{"source": "sports-facilities-info", "added_at": "2025-01-13", "type": "facilities-information", "priority": "medium", "status": "under-construction"}'::jsonb,
+ NULL,
+ 'sports-facilities-faq',
+ true);
