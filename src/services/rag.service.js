@@ -13,7 +13,7 @@ import { supabase } from '../config/supabase.js';
 import * as embeddingsLocal from './embeddings.service.js';
 import * as embeddingsCloud from './embeddings.service.cloud.js';
 import { expandQuerySimple } from './query-expansion.service.js';
-import { expandQueryWithContext, saveMessage } from './conversation-memory.service.js';
+import { expandQueryWithContext, saveMessage, getConversation } from './conversation-memory.service.js';
 import { classifyQuery, getSearchParams, logQueryClassification } from './query-classifier.service.js';
 import semanticCache from './semantic-cache.service.js';
 import OpenAI from 'openai';
@@ -39,6 +39,15 @@ const MAX_CONTEXT_LENGTH = parseInt(process.env.MAX_CONTEXT_LENGTH || '3000', 10
 export async function processRAGQuery(userQuery, options = {}) {
   const startTime = Date.now();
   const { streaming = false, sessionId = null } = options;
+  
+  // Verificar intentos fallidos previos
+  let failedAttempts = 0;
+  if (sessionId) {
+    const conversation = getConversation(sessionId);
+    if (conversation) {
+      failedAttempts = conversation.countFailedAttempts();
+    }
+  }
   
   // NUEVO: Clasificar query para optimizar búsqueda
   const queryType = classifyQuery(userQuery);
@@ -98,12 +107,13 @@ export async function processRAGQuery(userQuery, options = {}) {
       searchParams: `${searchParams.topK}k-${searchParams.threshold}t`
     });
     
-    const context = assembleContext(similarFAQs, userQuery);
+    const context = assembleContext(similarFAQs, userQuery, failedAttempts);
     
     // Step 4: Generate response with LLM (usar query original)
     const response = await generateResponseWithContext(userQuery, context, {
       streaming,
       similarFAQs,
+      failedAttempts,
     });
     
     const duration = Date.now() - startTime;
@@ -139,6 +149,8 @@ export async function processRAGQuery(userQuery, options = {}) {
       saveMessage(sessionId, 'assistant', response.answer, {
         category: similarFAQs[0]?.category,
         sources: similarFAQs.map(f => f.id),
+        hasInfo: hasGoodContext,
+        noInfo: !hasGoodContext,
       });
     }
     
@@ -212,17 +224,30 @@ export async function searchSimilarFAQs(queryEmbedding, options = {}) {
  * 
  * @param {Array} similarFAQs - Array of similar FAQs
  * @param {string} userQuery - Original user question
+ * @param {number} failedAttempts - Número de intentos fallidos previos
  * @returns {string} - Formatted context for LLM
  */
-function assembleContext(similarFAQs, userQuery) {
+function assembleContext(similarFAQs, userQuery, failedAttempts = 0) {
   if (!similarFAQs || similarFAQs.length === 0) {
+    // Si ya ha intentado 4 o más veces sin éxito
+    if (failedAttempts >= 3) {
+      return `
+Pregunta: ${userQuery}
+
+INSTRUCCIONES:
+- El usuario ha preguntado ${failedAttempts + 1} veces sin obtener respuesta
+- Di: "Disculpa, no tengo esa información aún. 📧 Visita https://unc.edu.ve/ para más detalles. Prometo mejorar y aprender más sobre la UNC. 🙏"
+- Sé empático y reconoce la limitación
+`.trim();
+    }
+    
+    // Primera vez o pocos intentos: mensaje más amigable
     return `
 Pregunta: ${userQuery}
 
 INSTRUCCIONES:
-- MÁXIMO 15 PALABRAS
-- Di: "No tengo esa información. 📧 Visita https://unc.edu.ve/ o contáctanos por redes."
-- Formato: [Mensaje] [emoji] [Acción sugerida]
+- Di: "No entiendo la pregunta, ¿me la formulas de otra forma? Sería un placer ayudarte. 😊"
+- Sé amigable y anima al usuario a reformular
 `.trim();
   }
   
@@ -281,6 +306,7 @@ async function generateResponseWithContext(query, context, options = {}) {
   const {
     streaming = false,
     similarFAQs = [],
+    failedAttempts = 0,
   } = options;
   
   // Create OpenAI client with OpenRouter config if needed
@@ -324,13 +350,13 @@ REGLAS ESTRICTAS:
 - Un emoji relevante al final
 - Termina con punto, NO con pregunta
 - Si la información está en las FAQs, responde con confianza
-- Si algo NO está en las FAQs, di que no tienes esa información
+- Si algo NO está en las FAQs, usa el mensaje indicado en las instrucciones
 
 IMPORTANTE: Nunca te presentes como representante oficial, empleado o vocero de la UNC. Eres solo un asistente informativo independiente creado por la comunidad.
 
 ${hasGoodContext ?
   'Resume la FAQ de forma completa y clara. Incluye todos los detalles relevantes y listas completas. Usa la información de las FAQs proporcionadas.' :
-  'Di: "No tengo esa información. 💡 Visita https://unc.edu.ve/ o contáctanos por redes."'
+  'Sigue EXACTAMENTE las instrucciones del contexto proporcionado.'
 }`;
 
   const messages = [

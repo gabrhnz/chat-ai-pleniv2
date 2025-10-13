@@ -56,6 +56,29 @@ class Conversation {
     return null;
   }
   
+  /**
+   * Contar cuántas veces el usuario ha preguntado algo sin obtener respuesta satisfactoria
+   */
+  countFailedAttempts() {
+    let failedCount = 0;
+    
+    // Revisar los últimos mensajes
+    for (let i = this.messages.length - 1; i >= 0 && i >= this.messages.length - 8; i--) {
+      const msg = this.messages[i];
+      
+      // Si es respuesta del bot que dice "No tengo esa información" o similar
+      if (msg.role === 'assistant' && msg.metadata.noInfo === true) {
+        failedCount++;
+      }
+      // Si el bot respondió con información útil, resetear contador
+      else if (msg.role === 'assistant' && msg.metadata.hasInfo === true) {
+        break;
+      }
+    }
+    
+    return failedCount;
+  }
+  
   isExpired() {
     return Date.now() - this.lastActivity > CONVERSATION_TTL;
   }
