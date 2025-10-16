@@ -8,7 +8,7 @@
  */
 
 import logger from '../../utils/logger.js';
-import { processRAGQuery } from '../../services/rag.service.js';
+import ragService from '../../services/rag.service.js';
 import messageFormatter from './message.formatter.js';
 
 class ManyChatWebhookHandler {
@@ -53,7 +53,7 @@ class ManyChatWebhookHandler {
       const sessionId = `manychat_${subscriberId}`;
 
       // Llamar al servicio RAG (el mismo que usa el chatbot web)
-      const ragResponse = await processRAGQuery(userInput, {
+      const ragResponse = await ragService.processRAGQuery(userInput, {
         sessionId,
         metadata: {
           platform: 'manychat',
