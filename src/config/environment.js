@@ -78,6 +78,26 @@ export const config = {
   logging: {
     level: process.env.LOG_LEVEL || 'info',
   },
+  
+  // Instagram Integration (opcional - solo si se configura)
+  instagram: {
+    // Token de acceso de la página de Instagram
+    pageAccessToken: process.env.INSTAGRAM_PAGE_ACCESS_TOKEN,
+    // ID de la cuenta de Instagram Business
+    accountId: process.env.INSTAGRAM_ACCOUNT_ID,
+    // Token de verificación del webhook (lo defines tú)
+    verifyToken: process.env.INSTAGRAM_VERIFY_TOKEN,
+    // Si la integración está habilitada
+    enabled: process.env.INSTAGRAM_ENABLED === 'true',
+  },
+  
+  // ManyChat Integration (opcional - más fácil que Instagram)
+  manychat: {
+    // API Token de ManyChat
+    apiToken: process.env.MANYCHAT_API_TOKEN,
+    // Si la integración está habilitada
+    enabled: process.env.MANYCHAT_ENABLED === 'true',
+  },
 };
 
 export default config;
